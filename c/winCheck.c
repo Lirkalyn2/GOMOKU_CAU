@@ -1,5 +1,16 @@
-int main(int argc, char const *argv[])
+#include <stdbool.h>
+#include <stdio.h>
+
+// int main(int argc, char const *argv[])
+// {
+//     /* code */
+//     return 0;
+// }
+
+bool winCheck(int **board)
 {
-    /* code */
-    return 0;
+    for (int i = 0; i < 15; i++)
+        for (int j = 0; j < 15; j++)
+            printf("%d", board[i][j]);
+    return true;
 }
