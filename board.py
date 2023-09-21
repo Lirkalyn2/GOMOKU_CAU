@@ -11,7 +11,7 @@ class Board():
         return self.board
 
     def putPiece(self, x, y, piece):
-        if (self.board[x][y] == 0):
+        if ((x >= 0 and x < BoardSize) and (y >= 0 and y < BoardSize) and (self.board[x][y] == 0)):
             self.board[x][y] = piece
             return True
         return False
@@ -27,10 +27,9 @@ class Board():
                     line += "  "
                 else:
                     line += "|"
-            if x != (BoardSize - 1):
+            if x != (BoardSize):
                 print(line + "\n", end="")
-            else:
-                print("  =============================================")
+        print("  =============================================")
 
 
 

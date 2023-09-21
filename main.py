@@ -2,32 +2,13 @@
 
 from board import Board
 
+InGame = True
 x = Board()
 
-x.display()
-# print("test")
-
-P1Piece = input("Where do you want to put your piece? ")
-x.putPiece((int(P1Piece[1]) - 1), (ord(P1Piece[0]) - 97), 1)
-x.display()
-
-P1Piece = input("Where do you want to put your piece? ")
-x.putPiece((int(P1Piece[1]) - 1), (ord(P1Piece[0]) - 97), 1)
-x.display()
-
-P1Piece = input("Where do you want to put your piece? ")
-x.putPiece((int(P1Piece[1]) - 1), (ord(P1Piece[0]) - 97), 1)
-x.display()
-
-P1Piece = input("Where do you want to put your piece? ")
-x.putPiece((int(P1Piece[1]) - 1), (ord(P1Piece[0]) - 97), 1)
-x.display()
-
-P1Piece = input("Where do you want to put your piece? ")
-x.putPiece((int(P1Piece[1]) - 1), (ord(P1Piece[0]) - 97), 1)
-x.display()
-
-
-print(x.winCheck(1, "1"))
-# x.rowCheck(1, x.board)
-# print(x.rowCheck(1, x.board))
+while(InGame):
+    x.display()
+    P1Piece = input("Where do you want to put your piece? ")
+    if (x.putPiece((int(P1Piece[1:]) - 1), (ord(P1Piece[0]) - 97), 1) is False): # needs try catch to avoid crash
+        print("Wrong move, P1Piece is not available please try again!")
+    print(x.winCheck(1, "1"))
+    ## AI player
