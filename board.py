@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
+BoardSize = 15
+
 class Board():
-    board = [[0 for x in range(16)] for y in range(16)]
+    board = [[0 for x in range(BoardSize)] for y in range(BoardSize)]
 
     # def __init__(self):
 
@@ -15,20 +17,20 @@ class Board():
         return False
 
     def display(self):
-        print("   a  b  c  d  f  g  h  i  j  k  l  m  n  o  p  q")
-        print("  ================================================")
+        print("   a  b  c  d  e  f  g  h  i  j  k  l  m  n  o")
+        print("  =============================================")
         for x in range(len(self.board)):
             line = (" " if (x + 1) < 10 else "") + str((x + 1)) + "|"
             for y in range(len(self.board[x])):
                 line += "-" if self.board[x][y] == 0 else ("W" if self.board[x][y] == 1 else "B")
-                if y != 15:
+                if y != (BoardSize - 1):
                     line += "  "
                 else:
                     line += "|"
-            if x != 15:
+            if x != (BoardSize - 1):
                 print(line + "\n", end="")
             else:
-                print("  ================================================")
+                print("  =============================================")
 
 
 
