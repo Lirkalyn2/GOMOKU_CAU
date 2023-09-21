@@ -9,7 +9,8 @@
 
 NAME	=	libwinCheck.so
 
-SRC		=	winCheck.c
+SRC		=	winCheck.c \
+			tools.c
 
 OBJ		=	$(SRC:.c=.o)
 
