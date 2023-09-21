@@ -1,15 +1,9 @@
 #include <stdbool.h>
 #include <stdio.h>
-// #include "tools.c"
 
 int countOccurrences(int *arr, int n, int x);
 bool rowCheck(int pieceNumber, int **board);
 
-// int main(int argc, char const *argv[])
-// {
-//     /* code */
-//     return 0;
-// }
 
 bool winCheck(int pieceNumber, int **board) {
     // for (int i = 0; i < 15; i++)
@@ -36,4 +30,12 @@ bool rowCheck(int pieceNumber, int **board) {
                 }
             }
     return false;
+}
+
+int **transposeDiagonalDec() {
+
+}
+
+int *getDiagonalDec(int **localBoard, int digNum) {
+
 }

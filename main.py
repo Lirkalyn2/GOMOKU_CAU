@@ -4,7 +4,8 @@ from ctypes import *
 import pathlib
 from board import Board
 
-libname = pathlib.Path().absolute() / "libwinCheck.so"
+# libname = pathlib.Path().absolute() / "libwinCheck.so"
+libname = pathlib.Path().absolute() / "libwinCheckPP.so"
 c_lib = CDLL(libname)
 c_lib.winCheck.argtypes = [c_int, POINTER(POINTER(c_int))]
 c_lib.winCheck.restype = c_bool

@@ -10,15 +10,15 @@
 NAME	=	ok
 
 all	:
-			make -C ./c
+			make -C ./c++
 
 $(NAME)	:
-			make -C ./c
+			make -C ./c++
 
 clean	:
-			make clean -C ./c
+			make clean -C ./c++
 
 fclean	:
-			make fclean -C ./c
+			make fclean -C ./c++
 
 re		:	fclean $(NAME)

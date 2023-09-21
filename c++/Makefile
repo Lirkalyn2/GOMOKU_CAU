@@ -1,0 +1,28 @@
+##
+## EPITECH PROJECT, 2019
+## Makefile
+## File description:
+## Makefile
+##
+
+.PHONY	:	$(NAME) clean fclean re
+
+NAME	=	libwinCheckPP.so
+
+SRC		=	winCheck.cpp \
+			tools.cpp
+
+OBJ		=	$(SRC:.cpp=.o)
+
+$(NAME)	:	$(OBJ)
+			g++ -c -Wall -Wextra -fpic $(SRC)
+			g++ -shared -o $(NAME) $(OBJ)
+			mv $(NAME) ../
+
+clean	:
+			rm -f $(OBJ)
+
+fclean	:	clean
+			rm -f ../$(NAME)
+
+re		:	fclean $(NAME)

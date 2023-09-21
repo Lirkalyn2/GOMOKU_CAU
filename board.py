@@ -36,7 +36,7 @@ class Board():
 
 
     def winCheck(self, Piece_Number, Piece_Colour):
-        if self.rowCheck(Piece_Number, self.board) or self.rowCheck(Piece_Number, self.transpose())or self.rowCheck(Piece_Number, self.transposeDiagonalInc()) or self.rowCheck(Piece_Number, self.transposeDiagonalDec()):
+        if self.rowCheck(Piece_Number, self.board) or self.rowCheck(Piece_Number, self.transpose()) or self.rowCheck(Piece_Number, self.transposeDiagonalInc()) or self.rowCheck(Piece_Number, self.transposeDiagonalDec()):
             Winner = Piece_Colour
             return Winner
 
