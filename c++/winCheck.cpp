@@ -51,11 +51,15 @@ extern "C" {
         // //if self.rowCheck(Piece_Number, self.board) or
         // // self.rowCheck(Piece_Number, self.transpose())or
         // // self.rowCheck(Piece_Number, self.transposeDiagonalInc()) or self.rowCheck(Piece_Number, self.transposeDiagonalDec()):
+
+
+        // transposeDiagonalInc(boardPP);
+
         return (
                     // rowCheck(pieceNumber, boardPP)
-                /*|| */rowCheck(pieceNumber, transpose(boardPP))
-                // || rowCheck(pieceNumber, transposeDiagonalInc(boardPP))
-                // || rowCheck(pieceNumber, transposeDiagonalDec(boardPP))
+                // /*|| */rowCheck(pieceNumber, transpose(boardPP))
+               // /*|| */rowCheck(pieceNumber, transposeDiagonalInc(boardPP))
+                /*|| */rowCheck(pieceNumber, transposeDiagonalDec(boardPP))
                 );
         return true;
     }
@@ -93,21 +97,21 @@ bool rowCheck(int pieceNumber, std::vector<std::vector<char>> boardPP) { // work
 
 
 std::vector<std::vector<char>> transposeDiagonalDec(std::vector<std::vector<char>> boardPP) {
-    std::vector<std::vector<char>> lst;
+    std::vector<std::vector<char>> lst;//(15);
 
     for (size_t i = 0; i < ((boardPP.size() * 2) - 1); i++)
-        lst.push_back(getDiagonalDec(boardPP, i));
+        lst.push_back(getDiagonalDec(boardPP, i));//[i] = getDiagonalDec(boardPP, i);//.push_back(getDiagonalDec(boardPP, i));
     return lst;
 }
 
 std::vector<char> getDiagonalDec(std::vector<std::vector<char>> boardPP, int digNum) {
     int index;
-    std::vector<char> lst;
+    std::vector<char> lst;//(15);
 
     if (digNum <= (int)(boardPP.size() - 1)) {
         index = (boardPP.size() - 1);
         for (int i = digNum; i >= 0; i--) {
-            lst.push_back(boardPP[i][index]);
+            lst.push_back(boardPP[i][index]);//[i] = boardPP[i][index];  //.push_back(boardPP[i][index]);
             index--;
         }
         return lst;
@@ -115,7 +119,7 @@ std::vector<char> getDiagonalDec(std::vector<std::vector<char>> boardPP, int dig
     else {
         index = (((boardPP.size() * 2) - 2) - digNum);
         for (size_t i = (boardPP.size() - 1); i > (digNum - boardPP.size()); i--) {
-            lst.push_back(boardPP[i][index]);
+            lst.push_back(boardPP[i][index]);//[i] = boardPP[i][index]; //.push_back(boardPP[i][index]);
             index--;
         }
         return lst;
@@ -123,31 +127,37 @@ std::vector<char> getDiagonalDec(std::vector<std::vector<char>> boardPP, int dig
 }
 
 
-std::vector<std::vector<char>> transposeDiagonalInc(std::vector<std::vector<char>> boardPP) {
-    std::vector<std::vector<char>> lst;
+std::vector<std::vector<char>> transposeDiagonalInc(std::vector<std::vector<char>> boardPP) { // works
+    std::vector<std::vector<char>> lst(30);
 
     for (size_t i = 0; i < ((boardPP.size() * 2) - 1); i++)
-        lst.push_back(getDiagonalInc(boardPP, i));
+        // std::cout << "i = " << i << std::endl;
+        lst[i] = getDiagonalInc(boardPP, i); //.push_back(getDiagonalInc(boardPP, i));
     return lst;
 }
 
 std::vector<char> getDiagonalInc(std::vector<std::vector<char>> boardPP, int digNum) {
     int index;
-    std::vector<char> lst;
+    std::vector<char> lst;//(15);
 
     if (digNum <= (int)(boardPP.size() - 1)) {
-        index = (boardPP.size() - 1);
+        // index = (boardPP.size() - 1);
+        index = 0;
         for (int i = digNum; i >= 0; i--) {
-            lst.push_back(boardPP[i][index]);
+            std::cout << "1: i = " << i << std::endl;
+            std::cout << "1: index = " << index << std::endl;
+            lst.push_back(boardPP[i][index]);//[i] = boardPP[i][index]; //.push_back(boardPP[i][index]);
             index++;
         }
         return lst;
     }
     else {
-        index = (digNum - (boardPP.size() + 1));
+        index = (digNum - boardPP.size() + 1);
         for (size_t i = (boardPP.size() - 1); i > (digNum - boardPP.size()); i--) {
-            lst.push_back(boardPP[i][index]);
-            index--;
+            std::cout << "2: i = " << i << std::endl;
+            std::cout << "2: index = " << index << std::endl;
+            lst.push_back(boardPP[i][index]); //[i] = boardPP[i][index]; //.push_back(boardPP[i][index]);
+            index++;
         }
         return lst;
     }
@@ -171,31 +181,60 @@ std::vector<char> getCol(std::vector<std::vector<char>> &boardPP, int colNum) {
     return lst;
 }
 
-// int main(void)
-// {
-//     int **data;
+int main(void)
+{
+    int **data;
 
-//     data = new int*[15];
+    data = new int*[15];
 
-//     for (int x = 0; x < 15; x++)
-//         data[x] = new int[15];
+    for (int x = 0; x < 15; x++)
+        data[x] = new int[15];
 
-//     for (int x = 0; x < 15; x++)
-//         for (int y = 0; y < 15; y++)
-//             data[x][y] = 0;
+    for (int x = 0; x < 15; x++)
+        for (int y = 0; y < 15; y++)
+            data[x][y] = 0;
 
-//     data[0][0] = 1;
-//     data[1][0] = 1;
-//     data[2][0] = 1;
-//     data[3][0] = 1;
-//     data[4][0] = 1;
+/*
+    data[0][0] = 1;
+    data[0][1] = 1;
+    data[0][2] = 1;
+    data[0][3] = 1;
+    data[0][4] = 1;
+*/
 
-//     for (int x = 0; x < 15; x++) {
-//         for (int y = 0; y < 15; y++)
-//             std::cout << data[x][y] << " ";
-//         std::cout << std::endl;
-//     }
+/*
+    data[0][0] = 1;
+    data[1][0] = 1;
+    data[2][0] = 1;
+    data[3][0] = 1;
+    data[4][0] = 1;
+*/
 
-//     std::cout << winCheck(1, data) << std::endl;
-//     return 0;
-// }
+
+/*
+    data[0][4] = 1;
+    data[1][3] = 1;
+    data[2][2] = 1;
+    data[3][1] = 1;
+    data[4][0] = 1;
+*/
+
+
+///-*
+    data[0][0] = 1;
+    data[1][1] = 1;
+    data[2][2] = 1;
+    data[3][3] = 1;
+    data[4][4] = 1;
+//*-/
+
+    for (int x = 0; x < 15; x++) {
+        for (int y = 0; y < 15; y++)
+            std::cout << data[x][y] << " ";
+        std::cout << std::endl;
+    }
+
+    std::cout << winCheck(1, data) << std::endl;
+    std::cout << true << std::endl;
+    return 0;
+}
