@@ -18,7 +18,7 @@ bool WinChecker::rowCheck(std::vector<std::vector<char>> board)
         if (countOccurrences(board[x]))
             for (std::size_t z = 0; z < (board.size() - 3); z++) {
                 connection = 0;
-                for (int c = 0; c < _goal; c++) {
+                for (int c = 0; ((c < _goal) && ((z + c) < board[x].size())); c++) {
                     if (board[x][(z + c)] == _pieceNumber)
                         connection++;
                     else
@@ -155,60 +155,68 @@ extern "C" {
     }
 }
 
-int main(void)
-{
-    int **data;
+// int main(void)
+// {
+//     int **data;
 
-    data = new int*[15];
+//     data = new int*[15];
 
-    for (int x = 0; x < 15; x++)
-        data[x] = new int[15];
+//     for (int x = 0; x < 15; x++)
+//         data[x] = new int[15];
 
-    for (int x = 0; x < 15; x++)
-        for (int y = 0; y < 15; y++)
-            data[x][y] = 0;
+//     for (int x = 0; x < 15; x++)
+//         for (int y = 0; y < 15; y++)
+//             data[x][y] = 0;
 
-/*
-    data[0][0] = 1;
-    data[0][1] = 1;
-    data[0][2] = 1;
-    data[0][3] = 1;
-    data[0][4] = 1;
-*/
+// /*
+//     data[0][0] = 1;
+//     data[0][1] = 1;
+//     data[0][2] = 1;
+//     data[0][3] = 1;
+//     data[0][4] = 1;
+// */
 
-/*
-    data[0][0] = 1;
-    data[1][0] = 1;
-    data[2][0] = 1;
-    data[3][0] = 1;
-    data[4][0] = 1;
-*/
-
-
-/*
-    data[0][4] = 1;
-    data[1][3] = 1;
-    data[2][2] = 1;
-    data[3][1] = 1;
-    data[4][0] = 1;
-*/
+// /*
+//     data[0][0] = 1;
+//     data[1][0] = 1;
+//     data[2][0] = 1;
+//     data[3][0] = 1;
+//     data[4][0] = 1;
+// */
 
 
-/*
-    data[0][0] = 1;
-    data[1][1] = 1;
-    data[2][2] = 1;
-    data[3][3] = 1;
-    data[4][4] = 1;
-*/
+// /*
+//     data[0][4] = 1;
+//     data[1][3] = 1;
+//     data[2][2] = 1;
+//     data[3][1] = 1;
+//     data[4][0] = 1;
+// */
 
-    for (int x = 0; x < 15; x++) {
-        for (int y = 0; y < 15; y++)
-            std::cout << data[x][y] << " ";
-        std::cout << std::endl;
-    }
 
-    std::cout << winCheck(1, data) << std::endl;
-    std::cout << true << std::endl;
-    return 0;
-}
+// /*
+//     data[0][0] = 1;
+//     data[1][1] = 1;
+//     data[2][2] = 1;
+//     data[3][3] = 1;
+//     data[4][4] = 1;
+// */
+
+//     for (int x = 0; x < 15; x++) {
+//         for (int y = 0; y < 15; y++)
+//             std::cout << data[x][y] << " ";
+//         std::cout << std::endl;
+//     }
+
+//     std::cout << winCheck(1, data) << std::endl;
+//     std::cout << true << std::endl;
+
+
+//     for (int x = 0; x < 15; x++)
+//         delete[] data[x];
+
+//     delete[] data;
+
+
+//     return 0;
+// }

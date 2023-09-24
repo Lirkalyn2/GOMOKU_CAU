@@ -4,7 +4,6 @@ from ctypes import *
 import pathlib
 from board import Board
 
-# libname = pathlib.Path().absolute() / "libwinCheck.so"
 libname = pathlib.Path().absolute() / "libwinCheckPP.so"
 c_lib = CDLL(libname)
 c_lib.winCheck.argtypes = [c_int, POINTER(POINTER(c_int))]
@@ -26,6 +25,7 @@ while(not Done):
     for i in range(len(x.board)):
         arr[i] = (c_int * len(x.board[i]))(*x.board[i])
     Done = c_lib.winCheck(1, *arr)
+    print("1 ", end="")
     print(Done)
 
     # print(x.winCheck(1, "1"))
