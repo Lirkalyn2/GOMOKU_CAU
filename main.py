@@ -25,6 +25,7 @@ while(not Done):
         no_move = True
         print("Wrong move, please try again!")
 
+    """Converts the board for the C++"""
     arr = (POINTER(c_int) * 15)()
     for i in range(len(x.board)):
         arr[i] = (c_int * len(x.board[i]))(*x.board[i])
