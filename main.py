@@ -37,10 +37,10 @@ while(not Done):
     ## AI player
     if not no_move:
         [y, z] = getNextMove(copy.deepcopy(x.board))
-        if (x.putPiece(z, y, 2)):
+        if not (x.putPiece(y, z, 2)):
             print("AI did something wrong")
         arr = (POINTER(c_int) * 15)()
         for i in range(len(x.board)):
             arr[i] = (c_int * len(x.board[i]))(*x.board[i])
-        Done = c_lib.winCheck(1, *arr)
+        Done = c_lib.winCheck(2, *arr)
 print("Oh no, you lost!")

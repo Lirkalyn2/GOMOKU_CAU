@@ -4,8 +4,8 @@ from board import Board, BoardSize
 import random, sys
 
 MAX_DEPTH = 4
-Infinity = sys.float_info.max
-NInfinity = sys.float_info.min
+Infinity = 100000
+NInfinity = -100000
 move = 0
 
 
@@ -14,6 +14,8 @@ def getNextMove(matrix):
     squares = getSquaresToCheck(matrix)
     y = 0
     x = 0
+    best_y = 0
+    best_x = 0
 
     print(f'Check {squares}')
     for i in range(len(squares)):
@@ -22,13 +24,16 @@ def getNextMove(matrix):
         score = alphabeta(matrix, 0, NInfinity, Infinity, False)
         matrix[y][x] = 0
 
-        print(f'{[x, y]} evaluated to {score}')
+        print(f'{[x, y]}`s bestscore of {score} evaluated to best {bestScore}')
         if score > bestScore:
+            print("MAIS PUTAIN")
             bestScore = score
+            best_y = y
+            best_x = x
     # Recast the answer as a readable str. Cast y from int to minuscule letter aswell
-    ans = f'{chr(97 + y)} {x + 1}'
-    print(f'Returning "{ans}"')
-    return [y, x]
+    ans = f'{chr(97 + best_y)} {best_x + 1}'
+    print(f'Returning {best_y} {best_x} for {bestScore}')
+    return [best_y, best_x]
 
 # Get only the squares that need to be checked (aka empty squares next to placed ones)
 
@@ -38,7 +43,6 @@ def getSquaresToCheck(matrix):
     for i in range(len(matrix)):
         for j in range(len(matrix[i])):
             if not matrix[i][j] and isTouchingOccupied(matrix, i, j):
-                print(f'Appending {i} {j} ()')
                 adjacent.append([i, j])
 #            matrix[i][j] = 0
 #    for i in range(len(matrix)):
@@ -69,6 +73,10 @@ def alphabeta(matrix, depth, alpha, beta, isAiTurn):
         eval = staticEval(matrix)
         return eval
 
+#    winner = Board.winCheck(matrix, 1 if not isAiTurn else 2, 
+#    if(winner):
+#        return -9999 * winner
+#
     best = NInfinity if isAiTurn else Infinity
     squares = getSquaresToCheck(matrix)
     for i in range(len(squares)):
@@ -76,7 +84,9 @@ def alphabeta(matrix, depth, alpha, beta, isAiTurn):
         matrix[y][x] = -1 if isAiTurn else 1
 
         score = alphabeta(matrix, depth + 1, alpha, beta, not isAiTurn)
+#        print(f'{"max" if isAiTurn else "min"} btw score {score} é best {best} is...', end='')
         best = max(score, best) if isAiTurn else min(score, best)
+#        print(f'{best}')
 
         if isAiTurn:
             alpha = max(alpha, best)
@@ -86,7 +96,6 @@ def alphabeta(matrix, depth, alpha, beta, isAiTurn):
         matrix[y][x] = 0
 
         if alpha >= beta:
-            print(f'alpha beta pruned at {[y, x]}')
             break
     return best
 
@@ -135,7 +144,6 @@ def diagonalScore(matrix):
         for key in res:
             res[key] = { "streak": 0, "current": 0, "score": 0 }
 
-        print(res)
         for j in range(i):
                 x = i-j
                 y = j
@@ -182,6 +190,5 @@ def adjacentBlockScore(count):
 def process(block, obj):
         (a, b, c) = scoreConsecutive(block, obj["current"], obj["streak"], obj["score"])
         tock = { "streak": a, "current": b, "score": c }
-        print(obj)
         return tock
 
