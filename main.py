@@ -1,13 +1,19 @@
 #!/usr/bin/env python3
 
+from ctypes import *
+import pathlib
 from board import Board
 from ai import *
 
-InGame = True
+libname = pathlib.Path().absolute() / "libwinCheckPP.so"
+c_lib = CDLL(libname)
+c_lib.winCheck.argtypes = [c_int, POINTER(POINTER(c_int))]
+c_lib.winCheck.restype = c_bool
+
+Done = False
 x = Board()
 
-while(InGame):
-    no_move = False
+while(not Done):
     x.display()
     P1Piece = input("Where do you want to put your piece? ").split()
     if (len(P1Piece) != 2 # make sure that we have two coordinate.
@@ -16,7 +22,16 @@ while(InGame):
         or x.putPiece((int(P1Piece[1]) - 1), (ord(P1Piece[0]) - 97), 1) is False): # try to put the piece in place if it's possible
         no_move = True
         print("Wrong move, please try again!")
-    print(x.winCheck(1, "1"))
+
+    """Converts the board for the C++"""
+    arr = (POINTER(c_int) * 15)()
+    for i in range(len(x.board)):
+        arr[i] = (c_int * len(x.board[i]))(*x.board[i])
+    """Launch C++ code"""
+    Done = c_lib.winCheck(1, *arr)
+    print("1 ", end="")
+    print(Done)
+    # print(x.winCheck(1, "1"))
     ## AI player
     print(x.board)
     if not no_move:
