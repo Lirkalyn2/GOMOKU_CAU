@@ -6,7 +6,6 @@ from board import Board
 from ai import *
 import copy
 
-# libname = pathlib.Path().absolute() / "libwinCheck.so"
 libname = pathlib.Path().absolute() / "libwinCheckPP.so"
 c_lib = CDLL(libname)
 c_lib.winCheck.argtypes = [c_int, POINTER(POINTER(c_int))]

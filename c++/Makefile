@@ -9,8 +9,7 @@
 
 NAME	=	libwinCheckPP.so
 
-SRC		=	winCheck.cpp \
-			tools.cpp
+SRC		=	WinChecker.cpp
 
 OBJ		=	$(SRC:.cpp=.o)
 
