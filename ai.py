@@ -3,8 +3,12 @@
 from board import Board, BoardSize
 import random, sys
 from ctypes import *
+from multiprocessing import Pool
+from multiprocessing.dummy import Pool as ThreadPool
+from itertools import repeat
 
 MAX_DEPTH = 4
+MAX_THREAD = 4
 Infinity = 100000
 NInfinity = -100000
 move = 0
@@ -26,22 +30,44 @@ def getNextMove(matrix):
     best_x = 0
 
     print(f'Check {squares}')
+    Multi_Pass = []
+
+    # for i in range(len(squares)):
+    #     [y, x] = squares[i]
+    #     matrix[y][x] = -1
+    #     score = alphabeta(matrix, 0, NInfinity, Infinity, False)
+    #     matrix[y][x] = 0
+
     for i in range(len(squares)):
         [y, x] = squares[i]
-        matrix[y][x] = -1
-        score = alphabeta(matrix, 0, NInfinity, Infinity, False)
-        matrix[y][x] = 0
+        Multi_Pass.append([y, x])
 
-        print(f'{[x, y]}`s bestscore of {score} evaluated to best {bestScore}')
-        if score > bestScore:
+    threadCount = MAX_THREAD
+    if (len(Multi_Pass) < MAX_THREAD):
+        threadCount = len(Multi_Pass)
+
+    pool = ThreadPool(threadCount)
+    results = pool.starmap(getNextMoveMulti, zip(Multi_Pass, repeat(matrix)))
+    pool.close()
+    pool.join()
+
+    for pos in range(len(Multi_Pass)):
+        print(f'{[x, y]}`s bestscore of {results[pos]} evaluated to best {bestScore}')
+        if results[pos] > bestScore:
             print("MAIS PUTAIN")
-            bestScore = score
+            bestScore = results[pos]
             best_y = y
             best_x = x
     # Recast the answer as a readable str. Cast y from int to minuscule letter aswell
     ans = f'{chr(97 + best_y)} {best_x + 1}'
     print(f'Returning {best_y} {best_x} for {bestScore}')
     return [best_y, best_x]
+
+def getNextMoveMulti(Multi_Pass, matrix):
+    matrix[Multi_Pass[0]][Multi_Pass[1]] = -1
+    tmp = alphabeta(matrix, 0, NInfinity, Infinity, False)
+    matrix[Multi_Pass[0]][Multi_Pass[1]] = 0
+    return tmp
 
 # Get only the squares that need to be checked (aka empty squares next to placed ones)
 
@@ -58,7 +84,7 @@ def getSquaresToCheck(matrix):
 #            matrix[i][j] = 0
 
     return adjacent
- 
+
 
 def isTouchingOccupied(matrix, i, j):
     return (occupied(matrix, i+1, j) or occupied(matrix, i-1, j) or occupied(matrix, i, j+1)
@@ -70,7 +96,7 @@ def occupied(matrix, x, y):
         return matrix[x][y]
     except:
         return False
-    
+
 
 # Alphabeta main function
 
@@ -130,10 +156,10 @@ def horizontalScore(matrix):
 
         for j in range(len(matrix)):
             (current, streak, score) = scoreConsecutive(matrix[i][j], current, streak, score)
-        
+
         if current != 0:
             score += current * adjacentBlockScore(streak)
-    
+
     return -1 * score
 
 def verticalScore(matrix):
@@ -147,7 +173,7 @@ def verticalScore(matrix):
 
         if current != 0:
             score += current * adjacentBlockScore(streak)
-    
+
     return -1 * score
 
 

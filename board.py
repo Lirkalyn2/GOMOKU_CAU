@@ -22,7 +22,7 @@ class Board():
         for x in range(len(self.board)):
             line = (" " if (x + 1) < 10 else "") + str((x + 1)) + "|"
             for y in range(len(self.board[x])):
-                line += "-" if self.board[x][y] == 0 else ("£" if self.board[x][y] == 1 else "$")
+                line += "-" if self.board[x][y] == 0 else ("B" if self.board[x][y] == 1 else "W")
                 if y != (BoardSize - 1):
                     line += "  "
                 else:
