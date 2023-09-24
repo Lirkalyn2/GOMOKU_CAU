@@ -96,7 +96,7 @@ bool rowCheck(int pieceNumber, std::vector<std::vector<char>> boardPP) { // work
 }
 
 
-std::vector<std::vector<char>> transposeDiagonalDec(std::vector<std::vector<char>> boardPP) {
+std::vector<std::vector<char>> transposeDiagonalDec(std::vector<std::vector<char>> boardPP) { // works
     std::vector<std::vector<char>> lst;//(15);
 
     for (size_t i = 0; i < ((boardPP.size() * 2) - 1); i++)
@@ -220,13 +220,13 @@ int main(void)
 */
 
 
-///-*
+/*
     data[0][0] = 1;
     data[1][1] = 1;
     data[2][2] = 1;
     data[3][3] = 1;
     data[4][4] = 1;
-//*-/
+*/
 
     for (int x = 0; x < 15; x++) {
         for (int y = 0; y < 15; y++)
