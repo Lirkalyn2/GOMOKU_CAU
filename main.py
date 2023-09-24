@@ -15,6 +15,7 @@ Done = False
 x = Board()
 
 while(not Done):
+    set_board_clib(x, c_lib)
     no_move = False
     x.display()
     P1Piece = input("Where do you want to put your piece? ").split()

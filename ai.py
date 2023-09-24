@@ -2,12 +2,20 @@
 
 from board import Board, BoardSize
 import random, sys
+from ctypes import *
 
 MAX_DEPTH = 4
 Infinity = 100000
 NInfinity = -100000
 move = 0
+board = []
+c_lib = 0
 
+def set_board_clib(board_m, clib):
+    global board
+    global c_lib
+    board = board_m
+    c_lib = clib
 
 def getNextMove(matrix):
     bestScore = NInfinity
@@ -67,16 +75,24 @@ def occupied(matrix, x, y):
 # Alphabeta main function
 
 def alphabeta(matrix, depth, alpha, beta, isAiTurn):
+    global board
+    global c_lib
 
     if depth >= MAX_DEPTH:
         # arrived at max depth, get the alphabeta values from this path and return
         eval = staticEval(matrix)
         return eval
 
-#    winner = Board.winCheck(matrix, 1 if not isAiTurn else 2, 
-#    if(winner):
-#        return -9999 * winner
-#
+    board.board = matrix
+    arr = (POINTER(c_int) * 15)()
+    for i in range(len(board.board)):
+        arr[i] = (c_int * len(board.board[i]))(*board.board[i])
+    winner = c_lib.winCheck(1 if not isAiTurn else 2, *arr)
+    if winner:
+        print(f'For, {"AI" if winner != 1 else "Human"}: ', end='')
+        print(f'CATASTROPHIC FAILURE IMMINENT for sit {matrix}: {winner}')
+        return 999999999 * (-1 if winner == 1 else 1)
+
     best = NInfinity if isAiTurn else Infinity
     squares = getSquaresToCheck(matrix)
     for i in range(len(squares)):
