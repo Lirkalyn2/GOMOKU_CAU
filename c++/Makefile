@@ -5,7 +5,7 @@
 ## Makefile
 ##
 
-.PHONY	:	$(NAME) clean fclean re
+.PHONY	:	$(NAME) comp clean fclean re
 
 NAME	=	libwinCheckPP.so
 
@@ -18,6 +18,9 @@ $(NAME)	:	$(OBJ)
 			g++ -c -Wall -Wextra -fpic $(SRC)
 			g++ -shared -o $(NAME) $(OBJ)
 			mv $(NAME) ../
+
+comp	:	$(OBJ)
+			g++ -g -Wall -Wextra $(SRC)
 
 clean	:
 			rm -f $(OBJ)

@@ -43,3 +43,4 @@ server/prisma/db
 .vscode/*
 *.o
 *.so
+*.out

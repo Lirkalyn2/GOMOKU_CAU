@@ -154,23 +154,48 @@ std::vector<char> getDiagonalInc(std::vector<std::vector<char>> boardPP, int dig
 }
 
 
-std::vector<std::vector<char>> transpose(std::vector<std::vector<char>> &boardPP) {
+std::vector<std::vector<char>> transpose(std::vector<std::vector<char>> &boardPP) { // works, can be simplify.
     std::vector<std::vector<char>> lst(15);
-    // printf("\n\n\n C++:\n");
 
     for (size_t i = 0; i < boardPP.size(); i++)
-        lst.push_back(getCol(boardPP, i));
+        lst[i] = getCol(boardPP, i);
     return lst;
 }
 
 std::vector<char> getCol(std::vector<std::vector<char>> &boardPP, int colNum) {
     std::vector<char> lst(15);
-    // printf("\n\n\n C++:\n");
 
     for (size_t i = 0; i < boardPP.size(); i++) {
-        // std::cout << "i = " << i << ", colNum = " << colNum << std::endl;
-        // std::cout << "boardPP[i][colNum] = " << boardPP[i][colNum] << std::endl;
-        lst.push_back(boardPP[i][colNum]);
+        lst[i] = boardPP[i][colNum];
     }
     return lst;
 }
+
+// int main(void)
+// {
+//     int **data;
+
+//     data = new int*[15];
+
+//     for (int x = 0; x < 15; x++)
+//         data[x] = new int[15];
+
+//     for (int x = 0; x < 15; x++)
+//         for (int y = 0; y < 15; y++)
+//             data[x][y] = 0;
+
+//     data[0][0] = 1;
+//     data[1][0] = 1;
+//     data[2][0] = 1;
+//     data[3][0] = 1;
+//     data[4][0] = 1;
+
+//     for (int x = 0; x < 15; x++) {
+//         for (int y = 0; y < 15; y++)
+//             std::cout << data[x][y] << " ";
+//         std::cout << std::endl;
+//     }
+
+//     std::cout << winCheck(1, data) << std::endl;
+//     return 0;
+// }
