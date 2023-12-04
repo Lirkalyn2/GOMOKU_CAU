@@ -10,8 +10,8 @@
 
 class Score {
     public:
-        int current = 0;
-        int streak = 0;
+        char current = 0;
+        size_t streak = 0;
         int score = 0;
 };
 

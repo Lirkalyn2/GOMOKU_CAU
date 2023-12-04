@@ -1,46 +1,37 @@
+/*
+** EPITECH PROJECT, 2023
+** GOMOKU_CAU
+** File description:
+** ai
+*/
 
-#include <vector>
-#include <array>
-#include <tuple>
-#include <iostream>
-#include "Score.hpp"
-#include "WinChecker.hpp"
+#include "ai.hpp"
 
-std::pair<int, int> getNextMove(std::vector<std::vector<char>> &board);
-std::vector<std::pair<int, int>> getSquaresToCheck(std::vector<std::vector<char>> &board); // can be multithreaded.
-bool isTouchingOccupied(std::vector<std::vector<char>> &board, int &x, int &y);
-bool occupied(std::vector<std::vector<char>> &board, int x, int y);
-int alphabeta(std::vector<std::vector<char>> &board, int depth, int alpha, int beta, bool isAiTurn);
-int staticEval(std::vector<std::vector<char>> &board);
-int horizontalScore(std::vector<std::vector<char>> &board);
-int verticalScore(std::vector<std::vector<char>> &board);
-int diagonalScore(std::vector<std::vector<char>> &board);
-void scoreConsecutive(char &block, int &current, int &streak, int &score); // can be made better
-int adjacentBlockScore(int &count);
-
-
-int MAX_DEPTH = 4;
-int Infinity = 100000;
-int NInfinity = -100000;
-int move = 0;
-
-std::pair<int, int> getNextMove(std::vector<std::vector<char>> &board)
+AI::AI(std::vector<std::vector<char>> board)
 {
-    int bestScore = NInfinity;
-    std::vector<std::pair<int, int>> squares = getSquaresToCheck(board);
+    _board = board;
+}
+
+AI::~AI()
+{}
+
+std::pair<int, int> AI::getNextMove()
+{
+    int bestScore = NINFINITY;
+    std::vector<std::pair<int, int>> squares = getSquaresToCheck(_board);
     int y = 0;
     int x = 0;
     int best_y = 0;
     int best_x = 0;
 
     // std::cout << squares << std::endl;
-    for (int i = 0; i < squares.size(); i++) {
+    for (size_t i = 0; i < squares.size(); i++) {
         x = squares[i].first;
         y = squares[i].second;
 
-        board[x][y] = -1;
-        int score = alphabeta(board, 0, NInfinity, Infinity, false);
-        board[x][y] = -0;
+        _board[x][y] = -1;
+        int score = alphabeta(_board, 0, NINFINITY, INFINITY, false); // easy to multithread
+        _board[x][y] = -0;
         // print(f'{[x, y]}`s bestscore of {score} evaluated to best {bestScore}')
         if (score > bestScore) {
             // print("MAIS PUTAIN")
@@ -54,34 +45,35 @@ std::pair<int, int> getNextMove(std::vector<std::vector<char>> &board)
     return std::make_pair(best_y, best_x);
 }
 
-std::vector<std::pair<int, int>> getSquaresToCheck(std::vector<std::vector<char>> &board) // can be multithreaded.
+std::vector<std::pair<int, int>> AI::getSquaresToCheck(std::vector<std::vector<char>> &my_board) // can be multithreaded.
 {
     std::vector<std::pair<int, int>> adjacent;
 
-    for (int i = 0; i < board.size(); i++) {
-        for (int j = 0; j < board[i].size(); j++) {
-            if (board[i][j] == 0 && isTouchingOccupied(board, i, j))
+    for (size_t i = 0; i < my_board.size(); i++) {
+        for (size_t j = 0; j < my_board[i].size(); j++) {
+            if (my_board[i][j] == 0 && isTouchingOccupied(i, j))
                 adjacent.push_back(std::make_pair(i, j));
         }
     }
     return adjacent;
 }
 
-bool isTouchingOccupied(std::vector<std::vector<char>> &board, int &x, int &y)
+bool AI::isTouchingOccupied(const int &x, const int &y) const
 {
-    return(occupied(board, (x + 1), y) || occupied(board, (x - 1), y) || occupied(board, x, (y + 1))
-        || occupied(board, x, (y - 1)) || occupied(board, (x + 1), (y + 1)) || occupied(board, (x - 1), (y + 1))
-        || occupied(board, (x - 1), (y - 1)) || occupied(board, (x + 1), (y - 1)));
+    return (occupied((x + 1), y) || occupied((x - 1), y) || occupied(x, (y + 1))
+        || occupied(x, (y - 1)) || occupied((x + 1), (y + 1)) || occupied((x - 1), (y + 1))
+        || occupied((x - 1), (y - 1)) || occupied((x + 1), (y - 1)));
 }
 
-bool occupied(std::vector<std::vector<char>> &board, int x, int y)
+bool AI::occupied(const int &x, const int &y) const
 {
-    if ((x >= 0 && x <= board.size()) && (y >= 0 && y <= board[0].size()))
-        return board[x][y];
+    if ((x >= 0 && x <= (int) _board.size()) && (y >= 0 && y <= (int) _board[0].size()))
+        return _board[x][y];
     return false;
 }
 
-int alphabeta(std::vector<std::vector<char>> &board, int depth, int alpha, int beta, bool isAiTurn)
+
+int AI::alphabeta(std::vector<std::vector<char>> &board, int depth, int alpha, int beta, bool isAiTurn)
 {
     if (depth >= MAX_DEPTH) {
         // arrived at max depth, get the alphabeta values from this path and return
@@ -98,10 +90,10 @@ int alphabeta(std::vector<std::vector<char>> &board, int depth, int alpha, int b
         return 999999999 * (isAiTurn ? 1 : -1);//(-1 if winner == 1 else 1);
     }
 
-    int best = (isAiTurn ? NInfinity : Infinity);
+    int best = (isAiTurn ? NINFINITY : INFINITY);
     std::vector<std::pair<int, int>> squares = getSquaresToCheck(board);
 
-    for (int i = 0; i < squares.size(); i++) {
+    for (size_t i = 0; i < squares.size(); i++) {
         int x = squares[i].first;
         int y = squares[i].second;
 
@@ -123,24 +115,42 @@ int alphabeta(std::vector<std::vector<char>> &board, int depth, int alpha, int b
 }
 
 
-int staticEval(std::vector<std::vector<char>> &board)
+int AI::staticEval(std::vector<std::vector<char>> &my_board) // one per thread
 {
-    int rsl = horizontalScore(board) + verticalScore(board) + diagonalScore(board);
+    int rsl = horizontalScore(my_board) + verticalScore(my_board) + diagonalScore(my_board);
 
     return rsl;
 }
 
-int horizontalScore(std::vector<std::vector<char>> &board)
+int AI::horizontalScore(std::vector<std::vector<char>> &my_board) // one per thread
 {
     int score = 0;
 
-    for (int i = 0; i < board.size(); i++) {
-        int current = 0;
-        int streak = 0;
+    for (size_t i = 0; i < my_board.size(); i++) {
+        char current = 0; // should be a char
+        size_t streak = 0;
 
-        for (int j = 0; j < board[i].size(); j++) {
+        for (size_t j = 0; j < my_board[i].size(); j++) {
             // (current, streak, score) = scoreConsecutive(matrix[i][j], current, streak, score);
-            scoreConsecutive(board[i][j], current, streak, score); // need to convert board[i][j]
+            scoreConsecutive(my_board[i][j], current, streak, score); // need to convert board[i][j]
+        }
+        if (current != 0)
+            score += current * adjacentBlockScore(streak);
+    }
+    return (-1 * score);
+}
+
+int AI::verticalScore(std::vector<std::vector<char>> &my_board) // one per thread
+{
+    int score = 0;
+
+    for (size_t i = 0; i < my_board.size(); i++) {
+        char current = 0;
+        size_t streak = 0;
+
+        for (size_t j = 0; j < my_board[i].size(); j++) {
+            // (current, streak, score) = scoreConsecutive(matrix[i][j], current, streak, score);
+            scoreConsecutive(my_board[j][i], current, streak, score); // need to convert board[i][j]
         }
         if (current != 0)
             score += current * adjacentBlockScore(streak);
@@ -148,86 +158,40 @@ int horizontalScore(std::vector<std::vector<char>> &board)
     return -1 * score;
 }
 
-int verticalScore(std::vector<std::vector<char>> &board)
+int AI::diagonalScore(std::vector<std::vector<char>> &my_board)// one per thread
 {
-    int score = 0;
-
-    for (int i = 0; i < board.size(); i++) {
-        int current = 0;
-        int streak = 0;
-
-        for (int j = 0; j < board[i].size(); j++) {
-            // (current, streak, score) = scoreConsecutive(matrix[i][j], current, streak, score);
-            scoreConsecutive(board[j][i], current, streak, score); // need to convert board[i][j]
-        }
-        if (current != 0)
-            score += current * adjacentBlockScore(streak);
-    }
-    return -1 * score;
-}
-
-int diagonalScore(std::vector<std::vector<char>> &board)
-{
-    size_t lenght = board.size();
+    size_t lenght = my_board.size();
     int score = 0;
     std::vector<Score> res(4);
     int x = 0;
     int y = 0;
 
-    for (int i = 4; i < lenght; i++) {
-        for (int k = 0; k < res.size(); k++)
+    for (size_t i = 4; i < lenght; i++) {
+        for (size_t k = 0; k < res.size(); k++)
             res[k] = Score();
-        for (int j = 0; j < i; j++) {
+        for (size_t j = 0; j < i; j++) {
             x = (i - j);
             y = j;
-            scoreConsecutive(board[x][y], res[0].current, res[0].streak, res[0].score); //process(matrix[x][y], res["d1"]);
-            // std::swap(res[0].current, res[0].streak);
+            scoreConsecutive(my_board[x][y], res[0].current, res[0].streak, res[0].score);
 
             x = (lenght - 1 - j);
             y = (i - j);
-            scoreConsecutive(board[x][y], res[1].current, res[1].streak, res[1].score); //process(matrix[x][y], res["d1"]);
-            // std::swap(res[1].current, res[1].streak);
+            scoreConsecutive(my_board[x][y], res[1].current, res[1].streak, res[1].score);
 
             x = j;
             y = (lenght - 1 - i + j);
-            scoreConsecutive(board[x][y], res[2].current, res[2].streak, res[2].score); //process(matrix[x][y], res["d1"]);
-            // std::swap(res[2].current, res[2].streak);
+            scoreConsecutive(my_board[x][y], res[2].current, res[2].streak, res[2].score);
 
             x = (lenght - 1 - i);
             y = (lenght - 1 - j);
-            scoreConsecutive(board[x][y], res[3].current, res[3].streak, res[3].score); //process(matrix[x][y], res["d1"]);
-            // std::swap(res[3].current, res[3].streak);
+            scoreConsecutive(my_board[x][y], res[3].current, res[3].streak, res[3].score);
         }
         score += (res[0].score + res[1].score + res[2].score + res[3].score);
-        // return (-1 * score);
     }
-    // the return should propably be here!!!
     return (-1 * score);
 }
 
-// std::tuple<int, int, int> scoreConsecutive(int &block, int &current, int &streak, int &score) // can be made better
-// (int, int ,int)scoreConsecutive(int &block, int &current, int &streak, int &score) // can be made better
-// {
-//     if (block != current) {
-//         if (current == 0) {
-//             current = block;
-//             streak = 1;
-//         }
-//         else {
-//             score += (current * adjacentBlockScore(streak));
-//             current = block;
-//             streak = 1;
-//         }
-//     }
-//     else {
-//         if (block != 0)
-//             streak += 1;
-//     }
-
-//     return {current, streak, score};
-// }
-
-void scoreConsecutive(char &block, int &current, int &streak, int &score) // can be made better
+void AI::scoreConsecutive(char &block, char &current, size_t &streak, int &score) // can be made better
 {
     if (block != current) {
         if (current == 0) {
@@ -246,9 +210,10 @@ void scoreConsecutive(char &block, int &current, int &streak, int &score) // can
     }
 }
 
-int adjacentBlockScore(int &count)
+int AI::adjacentBlockScore(const size_t &count) const
 {
     std::array<int, 6> scoreMatrix{{0, 2, 4, 8, 16, 32}};
 
-    return (count < 0 || count > scoreMatrix.size()) ? -1 : scoreMatrix[count];
+    // return (count < 0 || count > scoreMatrix.size()) ? -1 : scoreMatrix[count];
+    return (count > scoreMatrix.size()) ? -1 : scoreMatrix[count];
 }
