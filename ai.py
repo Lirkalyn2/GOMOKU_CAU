@@ -117,7 +117,8 @@ def alphabeta(matrix, depth, alpha, beta, isAiTurn):
     if winner:
         print(f'For, {"AI" if winner != 1 else "Human"}: ', end='')
         print(f'CATASTROPHIC FAILURE IMMINENT for sit {matrix}: {winner}')
-        return 999999999 * (-1 if winner == 1 else 1)
+        # winner should be 1 fro human and 2 for player, but here it either true or false.
+        return 999999999 * (-1 if winner == 1 else 1) # winCheck always return true or false, not the color of the winnig side. should compare isAiTurn.
 
     best = NInfinity if isAiTurn else Infinity
     squares = getSquaresToCheck(matrix)
@@ -142,9 +143,9 @@ def alphabeta(matrix, depth, alpha, beta, isAiTurn):
     return best
 
 def staticEval(matrix):
-    a = horizontalScore(matrix) or 0
-    b = verticalScore(matrix) or 0
-    c = diagonalScore(matrix) or 0
+    a = horizontalScore(matrix) or 0 # why "or 0", if the function return != 0, the result is always this return.
+    b = verticalScore(matrix) or 0 # why "or 0", if the function return != 0, the result is always this return.
+    c = diagonalScore(matrix) or 0 # why "or 0", if the function return != 0, the result is always this return.
 
     return a + b + c
 
@@ -204,7 +205,7 @@ def diagonalScore(matrix):
                 res["d4"] = process(matrix[x][y], res["d4"])
 
         score += res["d1"]["score"] + res["d2"]["score"] + res["d3"]["score"] + res["d4"]["score"]
-        return -1 * score
+    return -1 * score # shouldn't it be one more to the left ?? (to return when "for i in range(4, lenght)" is done)
 
 
 def scoreConsecutive(block, current, streak, score):
@@ -229,8 +230,8 @@ def adjacentBlockScore(count):
     except:
         return -1
 
-def process(block, obj):
-        (a, b, c) = scoreConsecutive(block, obj["current"], obj["streak"], obj["score"])
-        tock = { "streak": a, "current": b, "score": c }
-        return tock
+def process(block, obj): # why streak and current are swapped here?
+    (a, b, c) = scoreConsecutive(block, obj["current"], obj["streak"], obj["score"])
+    tock = { "current": a, "streak": b, "score": c }
+    return tock
 
