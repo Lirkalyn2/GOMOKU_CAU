@@ -77,8 +77,6 @@ int AI::alphabeta(std::vector<std::vector<char>> &board, int depth, int alpha, i
 {
     if (depth >= MAX_DEPTH) {
         // arrived at max depth, get the alphabeta values from this path and return
-        // int eval = staticEval(board);
-        // return eval;
         return staticEval(board);
     }
 
@@ -87,7 +85,7 @@ int AI::alphabeta(std::vector<std::vector<char>> &board, int depth, int alpha, i
         // print(f'For, {"AI" if winner != 1 else "Human"}: ', end='')
         // print(f'CATASTROPHIC FAILURE IMMINENT for sit {matrix}: {winner}')
         // return 999999999 * (-1 if winner == 1 else 1)
-        return 999999999 * (isAiTurn ? 1 : -1);//(-1 if winner == 1 else 1);
+        return 999999999 * (isAiTurn ? 1 : -1);
     }
 
     int best = (isAiTurn ? NINFINITY : INFINITY);
@@ -99,7 +97,6 @@ int AI::alphabeta(std::vector<std::vector<char>> &board, int depth, int alpha, i
 
         board[y][x] = (isAiTurn ? -1 : 1);//-1 if isAiTurn else 1
         int score = alphabeta(board, depth + 1, alpha, beta, !isAiTurn);
-        // best = max(score, best) if isAiTurn else min(score, best)
         int best = (isAiTurn ? std::max(score, best) : std::min(score, best));
 
         if (isAiTurn)
@@ -127,12 +124,11 @@ int AI::horizontalScore(std::vector<std::vector<char>> &my_board) // one per thr
     int score = 0;
 
     for (size_t i = 0; i < my_board.size(); i++) {
-        char current = 0; // should be a char
+        char current = 0;
         size_t streak = 0;
 
         for (size_t j = 0; j < my_board[i].size(); j++) {
-            // (current, streak, score) = scoreConsecutive(matrix[i][j], current, streak, score);
-            scoreConsecutive(my_board[i][j], current, streak, score); // need to convert board[i][j]
+            scoreConsecutive(my_board[i][j], current, streak, score);
         }
         if (current != 0)
             score += current * adjacentBlockScore(streak);
@@ -149,8 +145,7 @@ int AI::verticalScore(std::vector<std::vector<char>> &my_board) // one per threa
         size_t streak = 0;
 
         for (size_t j = 0; j < my_board[i].size(); j++) {
-            // (current, streak, score) = scoreConsecutive(matrix[i][j], current, streak, score);
-            scoreConsecutive(my_board[j][i], current, streak, score); // need to convert board[i][j]
+            scoreConsecutive(my_board[j][i], current, streak, score);
         }
         if (current != 0)
             score += current * adjacentBlockScore(streak);
@@ -214,6 +209,5 @@ int AI::adjacentBlockScore(const size_t &count) const
 {
     std::array<int, 6> scoreMatrix{{0, 2, 4, 8, 16, 32}};
 
-    // return (count < 0 || count > scoreMatrix.size()) ? -1 : scoreMatrix[count];
     return (count > scoreMatrix.size()) ? -1 : scoreMatrix[count];
 }
