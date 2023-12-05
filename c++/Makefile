@@ -9,16 +9,19 @@
 
 NAME	=	libwinCheckPP.so
 
-SRC		=	WinChecker.cpp	\
-			ai.cpp
+SRC		=	WinChecker.cpp				\
+			ai.cpp						\
+			./uint256/uint128_t.cpp 	\
+			./uint256/uint256_t.cpp
 
 OBJ		=	$(SRC:.cpp=.o)
 
 $(NAME)	:	$(OBJ)
 			g++ -g -c -Wall -Wextra -fpic $(SRC)
 			g++ -o test $(OBJ)
-			g++ -shared -o $(NAME) $(OBJ)
-			mv $(NAME) ../
+
+# g++ -shared -o $(NAME) $(OBJ)
+# mv $(NAME) ../
 
 comp	:	$(OBJ)
 			g++ -g -Wall -Wextra $(SRC)

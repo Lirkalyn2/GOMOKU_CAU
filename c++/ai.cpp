@@ -18,217 +18,306 @@ AI::AI(std::vector<std::vector<char>> board, char Ai_color, char Enemy_Color)
 AI::~AI()
 {}
 
-std::pair<int, int> AI::getNextMove()
+std::pair<int, int> AI::bestMove(uint256_t humanBits, uint256_t cpuBits)
 {
-    int bestScore = NINFINITY;
-    std::vector<std::pair<int, int>> squares = getSquaresToCheck(_board);
-    int y = 0;
-    int x = 0;
-    int best_y = 0;
-    int best_x = 0;
+    std::vector<std::pair<int, int>> squares = getSquaresToCheck(_board); // sometimes have repetisions of squares.
+    std::pair<int, int> move;
+    int alpha = NINFINITY;//-std::numeric_limits<int>::infinity();
+    int beta = INFINITY;//std::numeric_limits<int>::infinity();
+    int bestScore = NINFINITY;//-std::numeric_limits<int>::infinity();
 
-    for (size_t i = 0; i < squares.size(); i++) {
-        x = squares[i].first;
-        y = squares[i].second;
+    // for (size_t i = 0; i < squares.size(); i++) {
+    //     // int y = squares[i].first;
+    //     // int x = squares[i].second;
+    //     int x = squares[i].first;
+    //     int y = squares[i].second;
+    //     // uint256_t pos = uint256_t((y * 15) + x);
+    //     uint256_t pos = uint256_t((x * 15) + y);
 
-        _board[x][y] = -1;
-        int score = alphabeta(_board, 0, NINFINITY, INFINITY, false); // easy to multithread
-        _board[x][y] = 0;
-        if (score > bestScore) {
-            // print("MAIS PUTAIN")
-            bestScore = score;
-            best_x = x;
-            best_y = y;
-        }
-    }
-    // ans = f'{chr(97 + best_y)} {best_x + 1}'
-    // print(f'Returning {best_y} {best_x} for {bestScore}')
-    return std::make_pair(best_x, best_y); // it's actually x then y.
-    // return std::make_pair(best_y, best_x); // it's actually x then y.
-}
+    //     _board[x][y] = -1;
+    //     cpuBits |= 1 << pos;
+    //     // int score = 0;
+    //     int score = alphabeta(_board, 1, alpha, beta, false, humanBits, cpuBits);
 
-std::vector<std::pair<int, int>> AI::getSquaresToCheck(std::vector<std::vector<char>> &my_board) // can be multithreaded.
-{
-    std::vector<std::pair<int, int>> adjacent;
+    //     _board[x][y] = 0;
+    //     cpuBits &= ~(1 << pos);
 
-    for (size_t i = 0; i < my_board.size(); i++) {
-        for (size_t j = 0; j < my_board[i].size(); j++) {
-            if (my_board[i][j] == 0 && isTouchingOccupied(i, j)) {
-                // if (i == 0 && j == 1)
-                //     int z = 0;
-                adjacent.push_back(std::make_pair(i, j));
-            }
-        }
-    }
-    return adjacent;
-}
+    //     // console.log('%s evaluated to %s', JSON.stringify([y, x]), score);
 
-bool AI::isTouchingOccupied(const int &x, const int &y) const
-{
-    return (occupied((x + 1), y) || occupied((x - 1), y) || occupied(x, (y + 1))
-        || occupied(x, (y - 1)) || occupied((x + 1), (y + 1)) || occupied((x - 1), (y + 1))
-        || occupied((x - 1), (y - 1)) || occupied((x + 1), (y - 1)));
-}
+    //     // if we find a win, play it immediately
+    //     if(score == 9999){
+    //         return std::make_pair(x, y);
+    //     }
 
-bool AI::occupied(const int &x, const int &y) const
-{
-    if ((x >= 0 && x < (int) _board.size()) && (y >= 0 && y < (int) _board[0].size()))
-        return _board[x][y];
-    return false;
-}
-
-
-int AI::alphabeta(std::vector<std::vector<char>> &board, int depth, int alpha, int beta, bool isAiTurn)
-{
-    if (depth >= MAX_DEPTH) {
-        // arrived at max depth, get the alphabeta values from this path and return
-        return staticEval(board);
-    }
-
-    bool winner = WinChecker(board, (isAiTurn ? _AI_Color : _Enemy_Color)).result();
-    if (winner) {
-        // print(f'For, {"AI" if winner != 1 else "Human"}: ', end='')
-        // print(f'CATASTROPHIC FAILURE IMMINENT for sit {matrix}: {winner}')
-        // return 999999999 * (-1 if winner == 1 else 1)
-        return 999999999 * (isAiTurn ? 1 : -1);
-        // return 999999999 * (winner == 1 ? -1 : 1);
-    }
-
-    int best = (isAiTurn ? NINFINITY : INFINITY);
-    std::vector<std::pair<int, int>> squares = getSquaresToCheck(board);
-
-    // std::cout << "sqrr = " << squares.size() << std::endl;
-    // for (int i = 0; i < squares.size(); i++) {
-    //     std::cout << "alphe_beta " << "x = " << squares[i].first << ", y = " << squares[i].second << std::endl;
-    //     if (board[squares[i].first][squares[i].second] == 1 || board[squares[i].first][squares[i].second] == 2)
-    //         printf("\n\nNOOOOP %d, %d\n\n", (int)squares[i].first, (int)squares[i].second);
+    //     if(score > bestScore){
+    //         alpha = score;
+    //         bestScore = score;
+    //         move = std::make_pair(x, y);
+    //     }
     // }
 
     for (size_t i = 0; i < squares.size(); i++) {
-        int x = squares[i].first;
-        int y = squares[i].second;
+        int y = squares[i].first;
+        int x = squares[i].second;
+        uint256_t pos = uint256_t((y * 15) + x);
 
-        // if (board[y][x] == _Enemy_Color)
-        //     pass
+        _board[y][x] = -1;
+        cpuBits |= 1 << pos;
+        // int score = 0;
+        int score = alphabeta(_board, 1, alpha, beta, false, humanBits, cpuBits);
 
-        // board[y][x] = (isAiTurn ? -1 : _Enemy_Color);//-1 if isAiTurn else 1
-        board[x][y] = (isAiTurn ? -1 : _Enemy_Color);//-1 if isAiTurn else 1
-        int score = alphabeta(board, depth + 1, alpha, beta, !isAiTurn);
-        int best = (isAiTurn ? std::max(score, best) : std::min(score, best));
+        _board[y][x] = 0;
+        cpuBits &= ~(1 << pos);
 
-        if (isAiTurn)
-            alpha = std::max(alpha, best);
-        else
-            beta = std::min(beta, best);
+        // console.log('%s evaluated to %s', JSON.stringify([y, x]), score);
 
-        // board[y][x] = 0;
-        board[x][y] = 0;
-        if (alpha >= beta)
-            break;
+        // if we find a win, play it immediately
+        if(score == 9999){
+            return std::make_pair(y, x);
+        }
+
+        if(score > bestScore){
+            alpha = score;
+            bestScore = score;
+            move = std::make_pair(y, x);
+        }
+    }
+    return move;
+}
+
+std::vector<std::pair<int, int>> AI::getSquaresToCheck(const std::vector<std::vector<char>> &my_board)
+{
+    std::vector<std::pair<int, int>> rsl;
+    std::vector<char> tmp_rsl;
+
+    for(size_t i = 0; i < my_board.size(); i++) {
+        for(size_t j = 0; j < my_board[i].size(); j++) {
+            if(my_board[i][j] != 0) {
+                addAdjacent(i, j, tmp_rsl, my_board);
+            }
+        }
+    }
+
+    // std::sort(tmp_rsl.begin(), tmp_rsl.end(), [](const auto& x, const auto& y) {
+    //     return x.first < y.first;
+    // });
+
+    std::sort(tmp_rsl.begin(), tmp_rsl.end());
+
+    // std::transform(tmp_rsl.begin(), tmp_rsl.end(), tmp_rsl.begin(), [](const auto& z) {
+    //     rsl.push_back(std::make_pair(z.first >> 4, z.first & 0x0F));
+    // });
+
+    for (size_t i = 0; i < tmp_rsl.size(); i++) {
+        // std::cout << "tmp_rsl[" << i << "] = " << (int)tmp_rsl[i] << std::endl;
+        // rsl.push_back(std::make_pair((tmp_rsl[i] & 0x0f), (tmp_rsl[i] >> 4)));
+        rsl.push_back(std::make_pair((tmp_rsl[i] >> 4), (tmp_rsl[i] & 0x0f)));
+    }
+    return rsl;
+}
+
+void AI::addAdjacent(const char x, const char y, std::vector<char> &list, const std::vector<std::vector<char>> &my_board) // can be multi threaded
+{
+    // put((y + 1), x, list, my_board);
+    // put((y - 1), x, list, my_board);
+    // put(y, (x + 1), list, my_board);
+    // put(y, (x - 1), list, my_board);
+    // put((y + 1), (x + 1), list, my_board);
+    // put((y - 1), (x + 1), list, my_board);
+    // put((y - 1), (x - 1), list, my_board);
+    // put((y + 1), (x - 1), list, my_board);
+    put(x, (y + 1), list, my_board);
+    put(x, (y - 1), list, my_board);
+    put((x + 1), y, list, my_board);
+    put((x - 1), y, list, my_board);
+    put((x + 1), (y + 1), list, my_board);
+    put((x + 1), (y - 1), list, my_board);
+    put((x - 1), (y - 1), list, my_board);
+    put((x - 1), (y + 1), list, my_board);
+}
+
+void AI::put(const char y, const char x, std::vector<char> &list, const std::vector<std::vector<char>> &my_board)
+{
+    // if (!(x < 0 || y < 0 || x > (char)(my_board.size() - 2) || y > (char)(my_board.size() - 2) || !(my_board[y][x] == 0)))
+    // if ((x >= 0 && x <= (char)(my_board.size() - 2)) && (y >= 0 && y <= (char)(my_board.size() - 2)) && (my_board[x][y] == 0))
+    //     list.push_back(((x << 4) | y));
+
+    if ((x >= 0 && x <= (char)(my_board.size() - 2)) && (y >= 0 && y <= (char)(my_board.size() - 2)) && (my_board[y][x] == 0))
+        list.push_back(((y << 4) | x));
+}
+
+
+
+int AI::alphabeta(std::vector<std::vector<char>> matrix, int depth, int alpha, int beta, bool isAiTurn, uint256_t playerBits, uint256_t opponentBits)
+{
+    // totalCalcs++;
+    if (checkWinner(opponentBits, depth)) { // WinChecker(board, (isAiTurn ? _AI_Color : _Enemy_Color)).result();
+        return isAiTurn ? -9999 : 9999;
+    }
+
+    // stop at MAX_DEPTH
+    if (depth >= MAX_DEPTH){
+        if (checkWinner(playerBits, depth)) {
+            return isAiTurn ? 9999 : -9999;
+        }
+        else {
+            size_t eval = staticEval(playerBits) - staticEval(opponentBits);
+            return isAiTurn ? eval : -eval;
+        }
+    }
+
+    int best = isAiTurn ? -9999 : 9999;
+    std::vector<std::pair<int, int>> squares = getSquaresToCheck(matrix);//, depth);
+
+    for(size_t i = 0; i < squares.size(); i++){
+        // if(i === 0){
+        //     if(depth === 1){
+        //         console.log()
+        //     } else if(depth === 2){
+        //         console.log()
+        //     } else if(depth === 3){
+        //         console.log()
+        //     } else if(depth === 4){
+        //         console.log()
+        //     }
+        // }
+
+        int y = squares[i].first;
+        int x = squares[i].second;
+        uint256_t pos = ((y * 15) + x);
+
+        matrix[y][x] = (isAiTurn ? -1 : 1);
+        playerBits |= 1 << pos;
+
+        int score = alphabeta(matrix, (depth + 1), alpha, beta, !isAiTurn, opponentBits, playerBits);
+
+        matrix[y][x] = 0;
+        playerBits &= ~(1 << pos);
+
+        if(isAiTurn){
+            if(score >= beta){
+                return score;
+            }
+
+            best = std::max(score, best);
+            alpha = std::max(alpha, score);
+        }
+        else {
+            if(score <= alpha){
+                return score;
+            }
+
+            best = std::min(score, best);
+            beta = std::min(beta, score);
+        }
+
+        if(score == 9999 && isAiTurn){
+            return score;
+        }
+        else if(score == -9999 && !isAiTurn){
+            return score;
+        }
     }
     return best;
 }
 
-
-int AI::staticEval(std::vector<std::vector<char>> &my_board) // one per thread
+// bool AI::checkWinner(uint256_t &matrix, uint256_t &bits, int &depth)
+bool AI::checkWinner(uint256_t &bits, int &depth)
 {
-    int rsl = horizontalScore(my_board) + verticalScore(my_board) + diagonalScore(my_board);
+    // if(this.totalMoves + depth < 9){
+    //     return false;
+    // }
 
-    return rsl;
-}
+    // if(checkCache('winners', bits) !== false){
+    //     return checkCache('winners', bits);
+    // }
 
-int AI::horizontalScore(std::vector<std::vector<char>> &my_board) // one per thread
-{
-    int score = 0;
-
-    for (size_t i = 0; i < my_board.size(); i++) {
-        char current = 0;
-        size_t streak = 0;
-
-        for (size_t j = 0; j < my_board[i].size(); j++) {
-            scoreConsecutive(my_board[i][j], current, streak, score);
-        }
-        if (current != 0)
-            score += current * adjacentBlockScore(streak);
+    if(hasWon(bits)){
+        // putCache('winners', bits, true);
+        return true;
     }
-    return (-1 * score);
+
+    // putCache('winners', bits, false);
+    return false;
 }
 
-int AI::verticalScore(std::vector<std::vector<char>> &my_board) // one per thread
+
+bool AI::hasWon(const uint256_t &matrix)
 {
-    int score = 0;
+    uint256_t h = 31;
+    uint256_t v = 1152956690052710401;
+    // uint256_t d1 = 18447025552981295105;
+    uint256_t d1 = 281479271743489;
+    d1 *= 65536;
+    d1 += 1;
+    uint256_t d2 = 1152991877646254096;
 
-    for (size_t i = 0; i < my_board.size(); i++) {
-        char current = 0;
-        size_t streak = 0;
+    if(matchBitmask(matrix, h)) return true;
+    if(matchBitmask(matrix, d1)) return true;
+    if(matchBitmask(matrix, d2)) return true;
 
-        for (size_t j = 0; j < my_board[i].size(); j++) {
-            scoreConsecutive(my_board[j][i], current, streak, score);
-        }
-        if (current != 0)
-            score += current * adjacentBlockScore(streak);
+    // vertical is a "bit" different :)
+    while(v <= matrix) {
+        if((v & matrix) == v) return false;
+        v *= 2;
     }
-    return -1 * score;
+
+    return 0;
 }
 
-int AI::diagonalScore(std::vector<std::vector<char>> &my_board)// one per thread
+bool AI::matchBitmask(const uint256_t &matrix, uint256_t &mask)
 {
-    size_t lenght = my_board.size();
-    int score = 0;
-    std::vector<Score> res(4);
-    int x = 0;
-    int y = 0;
-
-    for (size_t i = 4; i < lenght; i++) {
-        for (size_t k = 0; k < res.size(); k++)
-            res[k] = Score();
-        for (size_t j = 0; j < i; j++) {
-            x = (i - j);
-            y = j;
-            scoreConsecutive(my_board[x][y], res[0].current, res[0].streak, res[0].score);
-
-            x = (lenght - 1 - j);
-            y = (i - j);
-            scoreConsecutive(my_board[x][y], res[1].current, res[1].streak, res[1].score);
-
-            x = j;
-            y = (lenght - 1 - i + j);
-            scoreConsecutive(my_board[x][y], res[2].current, res[2].streak, res[2].score);
-
-            x = (lenght - 1 - i);
-            y = (lenght - 1 - j);
-            scoreConsecutive(my_board[x][y], res[3].current, res[3].streak, res[3].score);
-        }
-        score += (res[0].score + res[1].score + res[2].score + res[3].score);
+    for(size_t i = 0; mask <= matrix; i++, mask *= 2){
+        if((i % 15) > 10) continue;
+        if((mask & matrix) == mask) return true;
     }
-    return (-1 * score);
+
+    return false;
 }
 
-void AI::scoreConsecutive(char &block, char &current, size_t &streak, int &score) // can be made better
+
+
+size_t AI::staticEval(const uint256_t &matrix)
 {
-    if (block != current) {
-        if (current == 0) {
-            current = block;
-            streak = 1;
+    // if(checkCache('evals', matrix)){
+    //     return checkCache('evals', matrix);
+    // }
+
+    size_t total = 0;
+    uint256_t hMask = 3;
+    uint256_t vMask = 32769;
+    uint256_t d1Mask = 65537;
+    uint256_t d2Mask = 16385;
+
+    total += matchMask(hMask, matrix);
+    total += matchMask(d1Mask, matrix);
+    total += matchMask(d2Mask, matrix);
+
+    while(vMask <= matrix){
+        if((vMask & matrix) == vMask) {
+            total++;
         }
-        else {
-            score += (current * adjacentBlockScore(streak));
-            current = block;
-            streak = 1;
-        }
+        vMask *= 2;
     }
-    else {
-        if (block != 0)
-            streak += 1;
-    }
+
+    //putCache('evals', matrix, total);
+
+    return total;
 }
 
-int AI::adjacentBlockScore(const size_t &count) const
+size_t AI::matchMask(uint256_t &mask, const uint256_t &matrix)
 {
-    std::array<int, 6> scoreMatrix{{0, 2, 4, 8, 16, 32}};
+    size_t count = 0;
 
-    return (count > scoreMatrix.size()) ? -1 : scoreMatrix[count];
+    for(size_t i = 0; mask <= matrix; i++, mask *= 2){
+        if((i%15) > 10) continue;
+        if((mask & matrix) == mask) count++;
+    }
+
+    return count;
 }
+
+
 
 extern "C" {
     bool ai(int **board) {
@@ -248,11 +337,35 @@ extern "C" {
         std::chrono::steady_clock::time_point end;
 
         bool battle = true;
+        uint256_t Player_1_bits = 0;
+        uint256_t Player_2_bits = 0;
 
         while (battle) {
+
+            Player_1_bits = 0;
+            Player_2_bits = 0;
+            for (int i = (int)(boardPP.size() - 1); i >= 0; i--) {
+                for(int j = (int)(boardPP[i].size() - 1); j >= 0; j--) {
+
+                    if (boardPP[i][j] == 1)
+                        Player_1_bits = (Player_1_bits << 1) | 1;
+                    else
+                        Player_1_bits = (Player_1_bits << 1);
+
+                    if (boardPP[i][j] == 2)
+                        Player_2_bits = (Player_2_bits << 1) | 1;
+                    else
+                        Player_2_bits = (Player_2_bits << 1);
+                }
+            }
+            std::cout << "Player_1_bits = " << Player_1_bits << std::endl;
+            std::cout << "Player_2_bits = " << Player_2_bits << std::endl;
+
+
+
             AI test_player_2(boardPP, 2, 1);
             begin = std::chrono::steady_clock::now();
-            auto rsl2 = test_player_2.getNextMove();
+            auto rsl2 = test_player_2.bestMove(Player_1_bits, Player_2_bits);
             end = std::chrono::steady_clock::now();
 
             std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
@@ -270,9 +383,30 @@ extern "C" {
             }
             // battle = false;
 
+            Player_1_bits = 0;
+            Player_2_bits = 0;
+            for (int i = (int)(boardPP.size() - 1); i >= 0; i--) {
+                for(int j = (int)(boardPP[i].size() - 1); j >= 0; j--) {
+
+                    if (boardPP[i][j] == 1)
+                        Player_1_bits = (Player_1_bits << 1) | 1;
+                    else
+                        Player_1_bits = (Player_1_bits << 1);
+
+                    if (boardPP[i][j] == 2)
+                        Player_2_bits = (Player_2_bits << 1) | 1;
+                    else
+                        Player_2_bits = (Player_2_bits << 1);
+                }
+            }
+            std::cout << "Player_1_bits = " << Player_1_bits << std::endl;
+            std::cout << "Player_2_bits = " << Player_2_bits << std::endl;
+
+
+
             AI test_player_1(boardPP, 1, 2);
             begin = std::chrono::steady_clock::now();
-            auto rsl1 = test_player_1.getNextMove();
+            auto rsl1 = test_player_1.bestMove(Player_2_bits, Player_1_bits);
             end = std::chrono::steady_clock::now();
 
             std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
