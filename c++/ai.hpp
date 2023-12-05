@@ -19,7 +19,7 @@
 
 class AI {
     public:
-        AI(std::vector<std::vector<char>> board);
+        AI(std::vector<std::vector<char>> board, char Ai_color, char Enemy_Color);
         ~AI();
         std::pair<int, int> getNextMove();
         std::vector<std::pair<int, int>> getSquaresToCheck(std::vector<std::vector<char>> &my_board);
@@ -37,6 +37,8 @@ class AI {
     protected:
     private:
         std::vector<std::vector<char>> _board;
+        char _AI_Color;
+        char _Enemy_Color;
 
 
         int MAX_DEPTH = 4;

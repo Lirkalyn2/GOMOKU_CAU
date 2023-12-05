@@ -6,10 +6,13 @@
 */
 
 #include "ai.hpp"
+#include <chrono>
 
-AI::AI(std::vector<std::vector<char>> board)
+AI::AI(std::vector<std::vector<char>> board, char Ai_color, char Enemy_Color)
 {
     _board = board;
+    _AI_Color = Ai_color;
+    _Enemy_Color = Enemy_Color;
 }
 
 AI::~AI()
@@ -24,15 +27,13 @@ std::pair<int, int> AI::getNextMove()
     int best_y = 0;
     int best_x = 0;
 
-    // std::cout << squares << std::endl;
     for (size_t i = 0; i < squares.size(); i++) {
         x = squares[i].first;
         y = squares[i].second;
 
         _board[x][y] = -1;
         int score = alphabeta(_board, 0, NINFINITY, INFINITY, false); // easy to multithread
-        _board[x][y] = -0;
-        // print(f'{[x, y]}`s bestscore of {score} evaluated to best {bestScore}')
+        _board[x][y] = 0;
         if (score > bestScore) {
             // print("MAIS PUTAIN")
             bestScore = score;
@@ -42,7 +43,8 @@ std::pair<int, int> AI::getNextMove()
     }
     // ans = f'{chr(97 + best_y)} {best_x + 1}'
     // print(f'Returning {best_y} {best_x} for {bestScore}')
-    return std::make_pair(best_y, best_x);
+    return std::make_pair(best_x, best_y); // it's actually x then y.
+    // return std::make_pair(best_y, best_x); // it's actually x then y.
 }
 
 std::vector<std::pair<int, int>> AI::getSquaresToCheck(std::vector<std::vector<char>> &my_board) // can be multithreaded.
@@ -51,8 +53,11 @@ std::vector<std::pair<int, int>> AI::getSquaresToCheck(std::vector<std::vector<c
 
     for (size_t i = 0; i < my_board.size(); i++) {
         for (size_t j = 0; j < my_board[i].size(); j++) {
-            if (my_board[i][j] == 0 && isTouchingOccupied(i, j))
+            if (my_board[i][j] == 0 && isTouchingOccupied(i, j)) {
+                // if (i == 0 && j == 1)
+                //     int z = 0;
                 adjacent.push_back(std::make_pair(i, j));
+            }
         }
     }
     return adjacent;
@@ -67,7 +72,7 @@ bool AI::isTouchingOccupied(const int &x, const int &y) const
 
 bool AI::occupied(const int &x, const int &y) const
 {
-    if ((x >= 0 && x <= (int) _board.size()) && (y >= 0 && y <= (int) _board[0].size()))
+    if ((x >= 0 && x < (int) _board.size()) && (y >= 0 && y < (int) _board[0].size()))
         return _board[x][y];
     return false;
 }
@@ -80,22 +85,34 @@ int AI::alphabeta(std::vector<std::vector<char>> &board, int depth, int alpha, i
         return staticEval(board);
     }
 
-    bool winner = WinChecker(board, (isAiTurn ? 2 : 1)).result();
+    bool winner = WinChecker(board, (isAiTurn ? _AI_Color : _Enemy_Color)).result();
     if (winner) {
         // print(f'For, {"AI" if winner != 1 else "Human"}: ', end='')
         // print(f'CATASTROPHIC FAILURE IMMINENT for sit {matrix}: {winner}')
         // return 999999999 * (-1 if winner == 1 else 1)
         return 999999999 * (isAiTurn ? 1 : -1);
+        // return 999999999 * (winner == 1 ? -1 : 1);
     }
 
     int best = (isAiTurn ? NINFINITY : INFINITY);
     std::vector<std::pair<int, int>> squares = getSquaresToCheck(board);
 
+    // std::cout << "sqrr = " << squares.size() << std::endl;
+    // for (int i = 0; i < squares.size(); i++) {
+    //     std::cout << "alphe_beta " << "x = " << squares[i].first << ", y = " << squares[i].second << std::endl;
+    //     if (board[squares[i].first][squares[i].second] == 1 || board[squares[i].first][squares[i].second] == 2)
+    //         printf("\n\nNOOOOP %d, %d\n\n", (int)squares[i].first, (int)squares[i].second);
+    // }
+
     for (size_t i = 0; i < squares.size(); i++) {
         int x = squares[i].first;
         int y = squares[i].second;
 
-        board[y][x] = (isAiTurn ? -1 : 1);//-1 if isAiTurn else 1
+        // if (board[y][x] == _Enemy_Color)
+        //     pass
+
+        // board[y][x] = (isAiTurn ? -1 : _Enemy_Color);//-1 if isAiTurn else 1
+        board[x][y] = (isAiTurn ? -1 : _Enemy_Color);//-1 if isAiTurn else 1
         int score = alphabeta(board, depth + 1, alpha, beta, !isAiTurn);
         int best = (isAiTurn ? std::max(score, best) : std::min(score, best));
 
@@ -104,7 +121,8 @@ int AI::alphabeta(std::vector<std::vector<char>> &board, int depth, int alpha, i
         else
             beta = std::min(beta, best);
 
-        board[y][x] = 0;
+        // board[y][x] = 0;
+        board[x][y] = 0;
         if (alpha >= beta)
             break;
     }
@@ -210,4 +228,143 @@ int AI::adjacentBlockScore(const size_t &count) const
     std::array<int, 6> scoreMatrix{{0, 2, 4, 8, 16, 32}};
 
     return (count > scoreMatrix.size()) ? -1 : scoreMatrix[count];
+}
+
+extern "C" {
+    bool ai(int **board) {
+        std::vector<std::vector<char>> boardPP(15);
+
+        for (int x = 0; x < 15; x++) {
+            std::vector<char> tmp(15);
+            for (int y = 0; y < 15; y++) {
+                tmp[y] = board[x][y];
+                // printf("%d", board[x][y]);
+            }
+            boardPP[x] = tmp;
+        }
+
+        // AI test(boardPP);
+        std::chrono::steady_clock::time_point begin;
+        std::chrono::steady_clock::time_point end;
+
+        bool battle = true;
+
+        while (battle) {
+            AI test_player_2(boardPP, 2, 1);
+            begin = std::chrono::steady_clock::now();
+            auto rsl2 = test_player_2.getNextMove();
+            end = std::chrono::steady_clock::now();
+
+            std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
+            std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
+            std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds> (end - begin).count() << "[ns]" << std::endl;
+
+            std::cout << "Player 2" << " y = " << rsl2.first << ", z = " << rsl2.second << std::endl;
+            boardPP[rsl2.first][rsl2.second] = 2;
+            battle = !WinChecker(boardPP, 2).result();
+
+            for (int x = 0; x < 15; x++) {
+                for (int y = 0; y < 15; y++)
+                    std::cout << (int) boardPP[x][y] << " ";
+                std::cout << std::endl;
+            }
+            // battle = false;
+
+            AI test_player_1(boardPP, 1, 2);
+            begin = std::chrono::steady_clock::now();
+            auto rsl1 = test_player_1.getNextMove();
+            end = std::chrono::steady_clock::now();
+
+            std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
+            std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
+            std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds> (end - begin).count() << "[ns]" << std::endl;
+
+            std::cout << "Player 1" << " y = " << rsl1.first << ", z = " << rsl1.second << std::endl;
+            boardPP[rsl1.first][rsl1.second] = 1;
+            battle = !WinChecker(boardPP, 1).result();
+
+            for (int x = 0; x < 15; x++) {
+                for (int y = 0; y < 15; y++)
+                    std::cout << (int) boardPP[x][y] << " ";
+                std::cout << std::endl;
+            }
+            // battle = false;
+        }
+
+
+
+        int i = 0;
+
+        //return WinChecker(boardPP, pieceNumber).result();
+        return 0;
+    }
+}
+
+int main(void)
+{
+    int **data;
+
+    data = new int*[15];
+
+    for (int x = 0; x < 15; x++)
+        data[x] = new int[15];
+
+    for (int x = 0; x < 15; x++)
+        for (int y = 0; y < 15; y++)
+            data[x][y] = 0;
+
+    data[0][0] = 1;
+
+/*
+    data[0][0] = 1;
+    data[0][1] = 1;
+    data[0][2] = 1;
+    data[0][3] = 1;
+    data[0][4] = 1;
+*/
+
+/*
+    data[0][0] = 1;
+    data[1][0] = 1;
+    data[2][0] = 1;
+    data[3][0] = 1;
+    data[4][0] = 1;
+*/
+
+
+/*
+    data[0][4] = 1;
+    data[1][3] = 1;
+    data[2][2] = 1;
+    data[3][1] = 1;
+    data[4][0] = 1;
+*/
+
+
+/*
+    data[0][0] = 1;
+    data[1][1] = 1;
+    data[2][2] = 1;
+    data[3][3] = 1;
+    data[4][4] = 1;
+*/
+
+    for (int x = 0; x < 15; x++) {
+        for (int y = 0; y < 15; y++)
+            std::cout << data[x][y] << " ";
+        std::cout << std::endl;
+    }
+
+    //std::cout << winCheck(1, data) << std::endl;
+    //std::cout << true << std::endl;
+
+    ai(data);
+
+    for (int x = 0; x < 15; x++)
+        delete[] data[x];
+
+    delete[] data;
+
+
+    return 0;
 }

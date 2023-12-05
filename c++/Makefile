@@ -3,7 +3,7 @@
 ## Makefile
 ## File description:
 ## Makefile
-##
+## -O3
 
 .PHONY	:	$(NAME) comp clean fclean re
 
@@ -15,7 +15,8 @@ SRC		=	WinChecker.cpp	\
 OBJ		=	$(SRC:.cpp=.o)
 
 $(NAME)	:	$(OBJ)
-			g++ -c -Wall -Wextra -fpic $(SRC)
+			g++ -g -c -Wall -Wextra -fpic $(SRC)
+			g++ -o test $(OBJ)
 			g++ -shared -o $(NAME) $(OBJ)
 			mv $(NAME) ../
 
