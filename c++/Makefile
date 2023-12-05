@@ -22,7 +22,7 @@ STATIC_OBJ		=	$(STATIC_SRC:.cpp=.o)
 
 $(NAME)	:	$(OBJ)
 			gcc -O3 -c -fPIC $(STATIC_SRC)
-			ar -rv $(STATIC_LIB_NAME) $(STATIC_OBJ)
+			ar -rv $(STATIC_LIB_NAME) uint128_t.o uint256_t.o
 			g++ -O3 -c -Wall -Wextra -fPIC $(SRC)
 			g++ -o test $(OBJ) $(STATIC_LIB_NAME)
 			g++ -shared -o $(NAME) $(OBJ) $(STATIC_LIB_NAME)

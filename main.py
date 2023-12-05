@@ -32,11 +32,6 @@ while(not Done):
     arr = (POINTER(c_int) * 15)()
     for i in range(len(x.board)):
         arr[i] = (c_int * len(x.board[i]))(*x.board[i])
-    # aa = c_lib.ai(*arr)
-    # print("aa")
-    # print(aa)
-    # print(int(aa/100))
-    # print(int(aa%100))
     if c_lib.winCheck(1, *arr):
         print("You won!")
         sys.exit(0)
@@ -47,21 +42,34 @@ while(not Done):
     if not no_move:
         """OLD AI"""
         # start_time = datetime.datetime.now()
-        # [y, z] = getNextMove(copy.deepcopy(x.board))
+        # # [y, z] = getNextMove(copy.deepcopy(x.board))
+        # getNextMove(copy.deepcopy(x.board))
         # end_time = datetime.datetime.now()
 
         # time_diff = (end_time - start_time)
         # execution_time = time_diff.total_seconds() * 1000
+        # print("OLD AI = ", end='')
         # print(execution_time, end='')
         # print("ms")
-        # print("y = " + str(y) + ", z = " + str(z))
+        # # print("y = " + str(y) + ", z = " + str(z))
 
         """NEW AI"""
         """Converts the board for the C++"""
         arr = (POINTER(c_int) * 15)()
         for i in range(len(x.board)):
             arr[i] = (c_int * len(x.board[i]))(*x.board[i])
+
+        # start_time = datetime.datetime.now()
+
         ai_rsl = c_lib.ai(*arr)
+
+        # end_time = datetime.datetime.now()
+        # time_diff = (end_time - start_time)
+        # execution_time = time_diff.total_seconds() * 1000
+        # print("NEW AI = ", end='')
+        # print(execution_time, end='')
+        # print("ms")
+
         y = int(ai_rsl / 100)
         z = int(ai_rsl % 100)
 
