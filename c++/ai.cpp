@@ -79,7 +79,11 @@ std::vector<std::pair<int, int>> AI::getSquaresToCheck(const std::vector<std::ve
 
     for (size_t i = 0; i < tmp_rsl.size(); i++) {
         // std::cout << "tmp_rsl[" << i << "] = " << (int)tmp_rsl[i] << std::endl;
-        rsl.push_back(std::make_pair((tmp_rsl[i] & 0x0f), (tmp_rsl[i] >> 4)));
+        int y = (tmp_rsl[i] & 0x0f);
+        int x = (tmp_rsl[i] >> 4);
+        if (my_board[y][x] <= 0) // band aid
+            rsl.push_back(std::make_pair(y, x));
+            // rsl.push_back(std::make_pair((tmp_rsl[i] & 0x0f), (tmp_rsl[i] >> 4)));
         // rsl.push_back(std::make_pair((tmp_rsl[i] >> 4), (tmp_rsl[i] & 0x0f)));
     }
     return rsl;
@@ -95,22 +99,10 @@ void AI::addAdjacent(const char i, const char j, std::vector<char> &list, const 
     put((i - 1), (j + 1), list, my_board);
     put((i - 1), (j - 1), list, my_board);
     put((i + 1), (j - 1), list, my_board);
-    // put(x, (y + 1), list, my_board);
-    // put(x, (y - 1), list, my_board);
-    // put((x + 1), y, list, my_board);
-    // put((x - 1), y, list, my_board);
-    // put((x + 1), (y + 1), list, my_board);
-    // put((x + 1), (y - 1), list, my_board);
-    // put((x - 1), (y - 1), list, my_board);
-    // put((x - 1), (y + 1), list, my_board);
 }
 
 void AI::put(const char y, const char x, std::vector<char> &list, const std::vector<std::vector<char>> &my_board)
 {
-    // if (!(x < 0 || y < 0 || x > (char)(my_board.size() - 2) || y > (char)(my_board.size() - 2) || !(my_board[y][x] == 0)))
-    // if ((x >= 0 && x <= (char)(my_board.size() - 2)) && (y >= 0 && y <= (char)(my_board.size() - 2)) && (my_board[x][y] == 0))
-    //     list.push_back(((x << 4) | y));
-
     if ((x >= 0 && x <= (char)(my_board.size() - 2)) && (y >= 0 && y <= (char)(my_board.size() - 2)) && (my_board[y][x] == 0))
         list.push_back(((y << 4) | x));
 }
