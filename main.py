@@ -34,10 +34,20 @@ while(not Done):
         print("You won!")
         sys.exit(0)
 
+    import datetime
 
     ## AI player
     if not no_move:
+        start_time = datetime.datetime.now()
         [y, z] = getNextMove(copy.deepcopy(x.board))
+        end_time = datetime.datetime.now()
+
+        time_diff = (end_time - start_time)
+        execution_time = time_diff.total_seconds() * 1000
+        print(execution_time, end='')
+        print("ms")
+        print("y = " + str(y) + ", z = " + str(z))
+
         if not (x.putPiece(y, z, 2)):
             print("AI did something wrong")
         arr = (POINTER(c_int) * 15)()

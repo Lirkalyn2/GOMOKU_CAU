@@ -26,7 +26,7 @@ class AI {
         ~AI();
         std::pair<int, int> bestMove(uint256_t humanBits, uint256_t cpuBits);
         std::vector<std::pair<int, int>> getSquaresToCheck(const std::vector<std::vector<char>> &my_board);
-        void addAdjacent(const char x, const char y, std::vector<char> &list, const std::vector<std::vector<char>> &my_board);
+        void addAdjacent(const char i, const char j, std::vector<char> &list, const std::vector<std::vector<char>> &my_board);
         void put(const char y, const char x, std::vector<char> &list, const std::vector<std::vector<char>> &my_board);
 
         int alphabeta(std::vector<std::vector<char>> matrix, int depth, int alpha, int beta, bool isAiTurn, uint256_t playerBits, uint256_t opponentBits);

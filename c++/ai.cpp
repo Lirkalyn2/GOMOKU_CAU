@@ -22,39 +22,9 @@ std::pair<int, int> AI::bestMove(uint256_t humanBits, uint256_t cpuBits)
 {
     std::vector<std::pair<int, int>> squares = getSquaresToCheck(_board); // sometimes have repetisions of squares.
     std::pair<int, int> move;
-    int alpha = NINFINITY;//-std::numeric_limits<int>::infinity();
-    int beta = INFINITY;//std::numeric_limits<int>::infinity();
-    int bestScore = NINFINITY;//-std::numeric_limits<int>::infinity();
-
-    // for (size_t i = 0; i < squares.size(); i++) {
-    //     // int y = squares[i].first;
-    //     // int x = squares[i].second;
-    //     int x = squares[i].first;
-    //     int y = squares[i].second;
-    //     // uint256_t pos = uint256_t((y * 15) + x);
-    //     uint256_t pos = uint256_t((x * 15) + y);
-
-    //     _board[x][y] = -1;
-    //     cpuBits |= 1 << pos;
-    //     // int score = 0;
-    //     int score = alphabeta(_board, 1, alpha, beta, false, humanBits, cpuBits);
-
-    //     _board[x][y] = 0;
-    //     cpuBits &= ~(1 << pos);
-
-    //     // console.log('%s evaluated to %s', JSON.stringify([y, x]), score);
-
-    //     // if we find a win, play it immediately
-    //     if(score == 9999){
-    //         return std::make_pair(x, y);
-    //     }
-
-    //     if(score > bestScore){
-    //         alpha = score;
-    //         bestScore = score;
-    //         move = std::make_pair(x, y);
-    //     }
-    // }
+    int alpha = NINFINITY;
+    int beta = INFINITY;
+    int bestScore = NINFINITY;
 
     for (size_t i = 0; i < squares.size(); i++) {
         int y = squares[i].first;
@@ -63,7 +33,6 @@ std::pair<int, int> AI::bestMove(uint256_t humanBits, uint256_t cpuBits)
 
         _board[y][x] = -1;
         cpuBits |= 1 << pos;
-        // int score = 0;
         int score = alphabeta(_board, 1, alpha, beta, false, humanBits, cpuBits);
 
         _board[y][x] = 0;
@@ -102,7 +71,7 @@ std::vector<std::pair<int, int>> AI::getSquaresToCheck(const std::vector<std::ve
     //     return x.first < y.first;
     // });
 
-    std::sort(tmp_rsl.begin(), tmp_rsl.end());
+    // std::sort(tmp_rsl.begin(), tmp_rsl.end());
 
     // std::transform(tmp_rsl.begin(), tmp_rsl.end(), tmp_rsl.begin(), [](const auto& z) {
     //     rsl.push_back(std::make_pair(z.first >> 4, z.first & 0x0F));
@@ -110,30 +79,30 @@ std::vector<std::pair<int, int>> AI::getSquaresToCheck(const std::vector<std::ve
 
     for (size_t i = 0; i < tmp_rsl.size(); i++) {
         // std::cout << "tmp_rsl[" << i << "] = " << (int)tmp_rsl[i] << std::endl;
-        // rsl.push_back(std::make_pair((tmp_rsl[i] & 0x0f), (tmp_rsl[i] >> 4)));
-        rsl.push_back(std::make_pair((tmp_rsl[i] >> 4), (tmp_rsl[i] & 0x0f)));
+        rsl.push_back(std::make_pair((tmp_rsl[i] & 0x0f), (tmp_rsl[i] >> 4)));
+        // rsl.push_back(std::make_pair((tmp_rsl[i] >> 4), (tmp_rsl[i] & 0x0f)));
     }
     return rsl;
 }
 
-void AI::addAdjacent(const char x, const char y, std::vector<char> &list, const std::vector<std::vector<char>> &my_board) // can be multi threaded
+void AI::addAdjacent(const char i, const char j, std::vector<char> &list, const std::vector<std::vector<char>> &my_board) // can be multi threaded
 {
-    // put((y + 1), x, list, my_board);
-    // put((y - 1), x, list, my_board);
-    // put(y, (x + 1), list, my_board);
-    // put(y, (x - 1), list, my_board);
-    // put((y + 1), (x + 1), list, my_board);
-    // put((y - 1), (x + 1), list, my_board);
-    // put((y - 1), (x - 1), list, my_board);
-    // put((y + 1), (x - 1), list, my_board);
-    put(x, (y + 1), list, my_board);
-    put(x, (y - 1), list, my_board);
-    put((x + 1), y, list, my_board);
-    put((x - 1), y, list, my_board);
-    put((x + 1), (y + 1), list, my_board);
-    put((x + 1), (y - 1), list, my_board);
-    put((x - 1), (y - 1), list, my_board);
-    put((x - 1), (y + 1), list, my_board);
+    put((i + 1), j, list, my_board);
+    put((i - 1), j, list, my_board);
+    put(i, (j + 1), list, my_board);
+    put(i, (j - 1), list, my_board);
+    put((i + 1), (j + 1), list, my_board);
+    put((i - 1), (j + 1), list, my_board);
+    put((i - 1), (j - 1), list, my_board);
+    put((i + 1), (j - 1), list, my_board);
+    // put(x, (y + 1), list, my_board);
+    // put(x, (y - 1), list, my_board);
+    // put((x + 1), y, list, my_board);
+    // put((x - 1), y, list, my_board);
+    // put((x + 1), (y + 1), list, my_board);
+    // put((x + 1), (y - 1), list, my_board);
+    // put((x - 1), (y - 1), list, my_board);
+    // put((x - 1), (y + 1), list, my_board);
 }
 
 void AI::put(const char y, const char x, std::vector<char> &list, const std::vector<std::vector<char>> &my_board)
@@ -381,48 +350,48 @@ extern "C" {
                     std::cout << (int) boardPP[x][y] << " ";
                 std::cout << std::endl;
             }
-            // battle = false;
+            battle = false;
 
-            Player_1_bits = 0;
-            Player_2_bits = 0;
-            for (int i = (int)(boardPP.size() - 1); i >= 0; i--) {
-                for(int j = (int)(boardPP[i].size() - 1); j >= 0; j--) {
+            // Player_1_bits = 0;
+            // Player_2_bits = 0;
+            // for (int i = (int)(boardPP.size() - 1); i >= 0; i--) {
+            //     for(int j = (int)(boardPP[i].size() - 1); j >= 0; j--) {
 
-                    if (boardPP[i][j] == 1)
-                        Player_1_bits = (Player_1_bits << 1) | 1;
-                    else
-                        Player_1_bits = (Player_1_bits << 1);
+            //         if (boardPP[i][j] == 1)
+            //             Player_1_bits = (Player_1_bits << 1) | 1;
+            //         else
+            //             Player_1_bits = (Player_1_bits << 1);
 
-                    if (boardPP[i][j] == 2)
-                        Player_2_bits = (Player_2_bits << 1) | 1;
-                    else
-                        Player_2_bits = (Player_2_bits << 1);
-                }
-            }
-            std::cout << "Player_1_bits = " << Player_1_bits << std::endl;
-            std::cout << "Player_2_bits = " << Player_2_bits << std::endl;
+            //         if (boardPP[i][j] == 2)
+            //             Player_2_bits = (Player_2_bits << 1) | 1;
+            //         else
+            //             Player_2_bits = (Player_2_bits << 1);
+            //     }
+            // }
+            // std::cout << "Player_1_bits = " << Player_1_bits << std::endl;
+            // std::cout << "Player_2_bits = " << Player_2_bits << std::endl;
 
 
 
-            AI test_player_1(boardPP, 1, 2);
-            begin = std::chrono::steady_clock::now();
-            auto rsl1 = test_player_1.bestMove(Player_2_bits, Player_1_bits);
-            end = std::chrono::steady_clock::now();
+            // AI test_player_1(boardPP, 1, 2);
+            // begin = std::chrono::steady_clock::now();
+            // auto rsl1 = test_player_1.bestMove(Player_2_bits, Player_1_bits);
+            // end = std::chrono::steady_clock::now();
 
-            std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
-            std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
-            std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds> (end - begin).count() << "[ns]" << std::endl;
+            // std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
+            // std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
+            // std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds> (end - begin).count() << "[ns]" << std::endl;
 
-            std::cout << "Player 1" << " y = " << rsl1.first << ", z = " << rsl1.second << std::endl;
-            boardPP[rsl1.first][rsl1.second] = 1;
-            battle = !WinChecker(boardPP, 1).result();
+            // std::cout << "Player 1" << " y = " << rsl1.first << ", z = " << rsl1.second << std::endl;
+            // boardPP[rsl1.first][rsl1.second] = 1;
+            // battle = !WinChecker(boardPP, 1).result();
 
-            for (int x = 0; x < 15; x++) {
-                for (int y = 0; y < 15; y++)
-                    std::cout << (int) boardPP[x][y] << " ";
-                std::cout << std::endl;
-            }
-            // battle = false;
+            // for (int x = 0; x < 15; x++) {
+            //     for (int y = 0; y < 15; y++)
+            //         std::cout << (int) boardPP[x][y] << " ";
+            //     std::cout << std::endl;
+            // }
+            // // battle = false;
         }
 
 

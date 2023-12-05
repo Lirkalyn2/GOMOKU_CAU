@@ -52,7 +52,7 @@ def getNextMove(matrix):
     pool.join()
 
     for pos in range(len(Multi_Pass)):
-        print(f'{[x, y]}`s bestscore of {results[pos]} evaluated to best {bestScore}')
+        # print(f'{[x, y]}`s bestscore of {results[pos]} evaluated to best {bestScore}')
         if results[pos] > bestScore:
             print("MAIS PUTAIN")
             bestScore = results[pos]
@@ -60,7 +60,7 @@ def getNextMove(matrix):
             best_x = x
     # Recast the answer as a readable str. Cast y from int to minuscule letter aswell
     ans = f'{chr(97 + best_y)} {best_x + 1}'
-    print(f'Returning {best_y} {best_x} for {bestScore}')
+    # print(f'Returning {best_y} {best_x} for {bestScore}')
     return [best_y, best_x]
 
 def getNextMoveMulti(Multi_Pass, matrix):
@@ -93,7 +93,7 @@ def isTouchingOccupied(matrix, i, j):
 
 def occupied(matrix, x, y):
     try:
-        return matrix[x][y]
+        return matrix[x][y] # this bool only works with 1 not 2
     except:
         return False
 
@@ -115,8 +115,8 @@ def alphabeta(matrix, depth, alpha, beta, isAiTurn):
         arr[i] = (c_int * len(board.board[i]))(*board.board[i])
     winner = c_lib.winCheck(1 if not isAiTurn else 2, *arr)
     if winner:
-        print(f'For, {"AI" if winner != 1 else "Human"}: ', end='')
-        print(f'CATASTROPHIC FAILURE IMMINENT for sit {matrix}: {winner}')
+        # print(f'For, {"AI" if winner != 1 else "Human"}: ', end='')
+        # print(f'CATASTROPHIC FAILURE IMMINENT for sit {matrix}: {winner}')
         # winner should be 1 fro human and 2 for player, but here it either true or false.
         return 999999999 * (-1 if winner == 1 else 1) # winCheck always return true or false, not the color of the winnig side. should compare isAiTurn.
 
