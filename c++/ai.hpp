@@ -59,7 +59,8 @@ class AI {
         // size_t totalCalcs = 0;
 
 
-        int MAX_DEPTH = 4;
+//        int MAX_DEPTH = 4;
+        int MAX_DEPTH = 2;
         int INFINITY = 100000;
         int NINFINITY = -100000;
 };
