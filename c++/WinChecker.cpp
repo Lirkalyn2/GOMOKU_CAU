@@ -153,6 +153,48 @@ extern "C" {
 
         return WinChecker(boardPP, pieceNumber).result();
     }
+
+
+
+    // std::string ai(int **board) {
+    // void eeeeeee(int **board) {
+    //     std::vector<std::vector<char>> boardPP(15);
+
+    //     for (int x = 0; x < 15; x++) {
+    //         std::vector<char> tmp(15);
+    //         for (int y = 0; y < 15; y++) {
+    //             // tmp[y] = board[x][y];
+    //         //     // printf("%d", board[x][y]);
+    //         }
+    //         boardPP[x] = tmp;
+    //     }
+
+    //     // return ;
+
+    //     // uint256_t Player_1_bits = 0;
+    //     // uint256_t Player_2_bits = 0;
+
+    //     // for (int i = (int)(boardPP.size() - 1); i >= 0; i--) {
+    //     //     for(int j = (int)(boardPP[i].size() - 1); j >= 0; j--) {
+
+    //     //         if (boardPP[i][j] == 1)
+    //     //             Player_1_bits = (Player_1_bits << 1) | 1;
+    //     //         else
+    //     //             Player_1_bits = (Player_1_bits << 1);
+
+    //     //         if (boardPP[i][j] == 2)
+    //     //             Player_2_bits = (Player_2_bits << 1) | 1;
+    //     //         else
+    //     //             Player_2_bits = (Player_2_bits << 1);
+    //     //     }
+    //     // }
+
+    //     // AI test_player_2(boardPP, 2, 1);
+    //     // std::pair<int, int> rsl = test_player_2.bestMove(Player_1_bits, Player_2_bits);
+    //     // return std::to_string(rsl.first) + " " + std::to_string(rsl.second);
+
+    //     // return WinChecker(boardPP, pieceNumber).result();
+    // }
 }
 
 // int main(void)

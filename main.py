@@ -10,6 +10,8 @@ libname = pathlib.Path().absolute() / "libwinCheckPP.so"
 c_lib = CDLL(libname)
 c_lib.winCheck.argtypes = [c_int, POINTER(POINTER(c_int))]
 c_lib.winCheck.restype = c_bool
+c_lib.ai.argtypes = [POINTER(POINTER(c_int))]
+c_lib.ai.restype = c_int
 
 Done = False
 x = Board()
@@ -30,6 +32,11 @@ while(not Done):
     arr = (POINTER(c_int) * 15)()
     for i in range(len(x.board)):
         arr[i] = (c_int * len(x.board[i]))(*x.board[i])
+    # aa = c_lib.ai(*arr)
+    # print("aa")
+    # print(aa)
+    # print(int(aa/100))
+    # print(int(aa%100))
     if c_lib.winCheck(1, *arr):
         print("You won!")
         sys.exit(0)
@@ -38,15 +45,25 @@ while(not Done):
 
     ## AI player
     if not no_move:
-        start_time = datetime.datetime.now()
-        [y, z] = getNextMove(copy.deepcopy(x.board))
-        end_time = datetime.datetime.now()
+        """OLD AI"""
+        # start_time = datetime.datetime.now()
+        # [y, z] = getNextMove(copy.deepcopy(x.board))
+        # end_time = datetime.datetime.now()
 
-        time_diff = (end_time - start_time)
-        execution_time = time_diff.total_seconds() * 1000
-        print(execution_time, end='')
-        print("ms")
-        print("y = " + str(y) + ", z = " + str(z))
+        # time_diff = (end_time - start_time)
+        # execution_time = time_diff.total_seconds() * 1000
+        # print(execution_time, end='')
+        # print("ms")
+        # print("y = " + str(y) + ", z = " + str(z))
+
+        """NEW AI"""
+        """Converts the board for the C++"""
+        arr = (POINTER(c_int) * 15)()
+        for i in range(len(x.board)):
+            arr[i] = (c_int * len(x.board[i]))(*x.board[i])
+        ai_rsl = c_lib.ai(*arr)
+        y = int(ai_rsl / 100)
+        z = int(ai_rsl % 100)
 
         if not (x.putPiece(y, z, 2)):
             print("AI did something wrong")
