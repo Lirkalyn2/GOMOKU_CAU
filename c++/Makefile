@@ -41,8 +41,11 @@ comp	:	$(OBJ)
 
 clean	:
 			rm -f $(OBJ)
+			rm -f $(STATIC_OBJ)
+			rm -f *.o
 
 fclean	:	clean
 			rm -f ../$(NAME)
+			rm -f $(STATIC_LIB_NAME)
 
 re		:	fclean $(NAME)

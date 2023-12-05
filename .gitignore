@@ -44,3 +44,5 @@ server/prisma/db
 *.o
 *.so
 *.out
+test
+*.a
