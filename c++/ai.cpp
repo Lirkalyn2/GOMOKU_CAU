@@ -210,7 +210,6 @@ bool AI::checkWinner(uint256_t &bits, int &depth)
     return false;
 }
 
-
 bool AI::hasWon(const uint256_t &matrix)
 {
     uint256_t h = 31;
@@ -227,11 +226,11 @@ bool AI::hasWon(const uint256_t &matrix)
 
     // vertical is a "bit" different :)
     while(v <= matrix) {
-        if((v & matrix) == v) return false;
+        if((v & matrix) == v) return true;
         v *= 2;
     }
 
-    return 0;
+    return false;
 }
 
 bool AI::matchBitmask(const uint256_t &matrix, uint256_t &mask)
@@ -350,47 +349,47 @@ extern "C" {
                     std::cout << (int) boardPP[x][y] << " ";
                 std::cout << std::endl;
             }
-            battle = false;
+            // battle = false;
 
-            // Player_1_bits = 0;
-            // Player_2_bits = 0;
-            // for (int i = (int)(boardPP.size() - 1); i >= 0; i--) {
-            //     for(int j = (int)(boardPP[i].size() - 1); j >= 0; j--) {
+            Player_1_bits = 0;
+            Player_2_bits = 0;
+            for (int i = (int)(boardPP.size() - 1); i >= 0; i--) {
+                for(int j = (int)(boardPP[i].size() - 1); j >= 0; j--) {
 
-            //         if (boardPP[i][j] == 1)
-            //             Player_1_bits = (Player_1_bits << 1) | 1;
-            //         else
-            //             Player_1_bits = (Player_1_bits << 1);
+                    if (boardPP[i][j] == 1)
+                        Player_1_bits = (Player_1_bits << 1) | 1;
+                    else
+                        Player_1_bits = (Player_1_bits << 1);
 
-            //         if (boardPP[i][j] == 2)
-            //             Player_2_bits = (Player_2_bits << 1) | 1;
-            //         else
-            //             Player_2_bits = (Player_2_bits << 1);
-            //     }
-            // }
-            // std::cout << "Player_1_bits = " << Player_1_bits << std::endl;
-            // std::cout << "Player_2_bits = " << Player_2_bits << std::endl;
+                    if (boardPP[i][j] == 2)
+                        Player_2_bits = (Player_2_bits << 1) | 1;
+                    else
+                        Player_2_bits = (Player_2_bits << 1);
+                }
+            }
+            std::cout << "Player_1_bits = " << Player_1_bits << std::endl;
+            std::cout << "Player_2_bits = " << Player_2_bits << std::endl;
 
 
 
-            // AI test_player_1(boardPP, 1, 2);
-            // begin = std::chrono::steady_clock::now();
-            // auto rsl1 = test_player_1.bestMove(Player_2_bits, Player_1_bits);
-            // end = std::chrono::steady_clock::now();
+            AI test_player_1(boardPP, 1, 2);
+            begin = std::chrono::steady_clock::now();
+            auto rsl1 = test_player_1.bestMove(Player_2_bits, Player_1_bits);
+            end = std::chrono::steady_clock::now();
 
-            // std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
-            // std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
-            // std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds> (end - begin).count() << "[ns]" << std::endl;
+            std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
+            std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
+            std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds> (end - begin).count() << "[ns]" << std::endl;
 
-            // std::cout << "Player 1" << " y = " << rsl1.first << ", z = " << rsl1.second << std::endl;
-            // boardPP[rsl1.first][rsl1.second] = 1;
-            // battle = !WinChecker(boardPP, 1).result();
+            std::cout << "Player 1" << " y = " << rsl1.first << ", z = " << rsl1.second << std::endl;
+            boardPP[rsl1.first][rsl1.second] = 1;
+            battle = !WinChecker(boardPP, 1).result();
 
-            // for (int x = 0; x < 15; x++) {
-            //     for (int y = 0; y < 15; y++)
-            //         std::cout << (int) boardPP[x][y] << " ";
-            //     std::cout << std::endl;
-            // }
+            for (int x = 0; x < 15; x++) {
+                for (int y = 0; y < 15; y++)
+                    std::cout << (int) boardPP[x][y] << " ";
+                std::cout << std::endl;
+            }
             // // battle = false;
         }
 
