@@ -65,10 +65,10 @@ class AI {
         char _AI_Color;
         char _Enemy_Color;
         // size_t totalCalcs = 0;
-        std::list<ThreadPool> thread_pool; // why not a vector or array ???
+        std::list<ThreadPool> main_square_thread_pool; // why not a vector or array ???
+        std::list<ThreadPool> leaves_thread_pool; // why not a vector or array ???
         // std::list<GameState> thread_memory_space; // HAS TO BE A LIST!!!
-        Circular_buffer<GameState *, MAX_GAME_MEM> game_memory_space_waiting;
-        Circular_buffer<GameState *, MAX_GAME_MEM> game_memory_space_working;
+        Circular_buffer<GameState *, MAX_GAME_MEM> leaves_memory_space;
         // maybe add a pool of init GameState here to save time.
 
         int MAX_DEPTH = 4;
