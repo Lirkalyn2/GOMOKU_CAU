@@ -27,6 +27,10 @@ std::pair<int, int> AI::bestMove(uint256_t humanBits, uint256_t cpuBits)
     int bestScore = NINFINITY;
 
     for (size_t i = 0; i < squares.size(); i++) {
+        std::cout << "y = " << squares[i].first << ", x = " << squares[i].second << std::endl;
+    }
+
+    for (size_t i = 0; i < squares.size(); i++) {
         int y = squares[i].first;
         int x = squares[i].second;
         uint256_t pos = uint256_t((y * 15) + x);
@@ -35,17 +39,17 @@ std::pair<int, int> AI::bestMove(uint256_t humanBits, uint256_t cpuBits)
         cpuBits |= 1 << pos;
         int score = alphabeta(_board, 1, alpha, beta, false, humanBits, cpuBits);
 
-        std::cout << "Final score for X:" << x << " et Y:" << y << " score:" << score << " Fore evaluation : " << staticEval(humanBits) << " evel" << staticEval(cpuBits) << std::endl;
+        // std::cout << "Final score for X:" << x << " et Y:" << y << " score:" << score << " Fore evaluation : " << staticEval(humanBits) << " evel" << staticEval(cpuBits) << std::endl;
 
         _board[y][x] = 0;
         cpuBits &= ~(1 << pos);
 
         // if we find a win, play it immediately
-        if(score == 9999){
+        if (score == 9999) {
             return std::make_pair(y, x);
         }
 
-        if(score > bestScore){
+        if (score > bestScore) {
             alpha = score;
             bestScore = score;
             move = std::make_pair(y, x);
@@ -57,21 +61,31 @@ std::pair<int, int> AI::bestMove(uint256_t humanBits, uint256_t cpuBits)
 std::vector<std::pair<int, int>> AI::getSquaresToCheck(const std::vector<std::vector<char>> &my_board)
 {
     std::vector<std::pair<int, int>> rsl;
-    std::vector<char> tmp_rsl;
+    std::vector<unsigned char> tmp_rsl;
 
     for (size_t i = 0; i < my_board.size(); i++) {
         for (size_t j = 0; j < my_board[i].size(); j++) {
-            if (my_board[j][i] != 0) {
+            if (my_board[i][j] != 0) {
                 addAdjacent(i, j, tmp_rsl, my_board);
             }
         }
     }
 
+    // std::sort(tmp_rsl.begin(), tmp_rsl.end(), [](const auto& x, const auto& y) {
+    //     return x.first < y.first;
+    // });
+
+    // std::sort(tmp_rsl.begin(), tmp_rsl.end());
+
+    // std::transform(tmp_rsl.begin(), tmp_rsl.end(), tmp_rsl.begin(), [](const auto& z) {
+    //     rsl.push_back(std::make_pair(z.first >> 4, z.first & 0x0F));
+    // });
 
     for (size_t i = 0; i < tmp_rsl.size(); i++) {
         // std::cout << "tmp_rsl[" << i << "] = " << (int)tmp_rsl[i] << std::endl;
         int y = (tmp_rsl[i] & 0x0f);
         int x = (tmp_rsl[i] >> 4);
+        std::cout << "y = " << y << ", x = " << x << std::endl;
         if (my_board[y][x] <= 0) // band aid
             rsl.push_back(std::make_pair(y, x));
             // rsl.push_back(std::make_pair((tmp_rsl[i] & 0x0f), (tmp_rsl[i] >> 4)));
@@ -80,7 +94,7 @@ std::vector<std::pair<int, int>> AI::getSquaresToCheck(const std::vector<std::ve
     return rsl;
 }
 
-void AI::addAdjacent(const char i, const char j, std::vector<char> &list, const std::vector<std::vector<char>> &my_board) // can be multi threaded
+void AI::addAdjacent(const char i, const char j, std::vector<unsigned char> &list, const std::vector<std::vector<char>> &my_board) // can be multi threaded
 {
     put((i + 1), j, list, my_board);
     put((i - 1), j, list, my_board);
@@ -92,21 +106,22 @@ void AI::addAdjacent(const char i, const char j, std::vector<char> &list, const 
     put((i + 1), (j - 1), list, my_board);
 }
 
-void AI::put(const char y, const char x, std::vector<char> &list, const std::vector<std::vector<char>> &my_board)
+void AI::put(const char y, const char x, std::vector<unsigned char> &list, const std::vector<std::vector<char>> &my_board)
 {
-    char combination = ((y << 4) | x);
-    for(int i = 0; i < list.size(); i++)
+    unsigned char combination = ((y << 4) | x);
+
+    for (size_t i = 0; i < list.size(); i++)
         if (list[i] == combination)
             return;
 
-    if ((x >= 0 && x <= (char)(my_board.size() - 2)) && (y >= 0 && y <= (char)(my_board.size() - 2)) && (my_board[y][x] == 0))
+    if ((x >= 0 && x <= (unsigned char)(my_board.size() - 2)) && (y >= 0 && y <= (unsigned char)(my_board.size() - 2)) && (my_board[y][x] == 0)) // maybe change it <=
         list.push_back(combination);
 }
 
 int AI::alphabeta(std::vector<std::vector<char>> matrix, int depth, int alpha, int beta, bool isAiTurn, uint256_t playerBits, uint256_t opponentBits)
 {
-
-    if (checkWinner(opponentBits, depth)) {
+    // totalCalcs++;
+    if (checkWinner(opponentBits, depth)) { // WinChecker(board, (isAiTurn ? _AI_Color : _Enemy_Color)).result();
 //        std::cout << "Critical defeat! And a " << (isAiTurn ? " bad" : "good") << " one!!!" << std::endl;
         return isAiTurn ? -9999 : 9999;
     }
@@ -115,17 +130,17 @@ int AI::alphabeta(std::vector<std::vector<char>> matrix, int depth, int alpha, i
     if (depth >= MAX_DEPTH) {
         if (checkWinner(playerBits, depth)) {
             return isAiTurn ? 9999 : -9999;
-        } else {
+        }
+        else {
             size_t eval = staticEval(playerBits) - staticEval(opponentBits);
             return isAiTurn ? eval : -eval;
         }
     }
 
     int best = isAiTurn ? -9999 : 9999;
-    std::vector<std::pair<int, int>> squares = getSquaresToCheck(matrix);//, depth);
+    std::vector<std::pair<int, int>> squares = getSquaresToCheck(matrix);
 
     for (size_t i = 0; i < squares.size(); i++) {
-
         int y = squares[i].first;
         int x = squares[i].second;
         uint256_t pos = ((y * 15) + x);
@@ -138,15 +153,16 @@ int AI::alphabeta(std::vector<std::vector<char>> matrix, int depth, int alpha, i
         matrix[y][x] = 0;
         playerBits &= ~(1 << pos);
 
-        std::cout << "For X:" << x << " et Y:" << y << " score:" << score << " for " << (isAiTurn ? "us" : "human") << std::endl;
-        if(isAiTurn){
+        // std::cout << "For X:" << x << " et Y:" << y << " score:" << score << " for " << (isAiTurn ? "us" : "human") << std::endl;
+        if (isAiTurn) {
             if (score >= beta) {
                 return score;
             }
 
             best = std::max(score, best);
             alpha = std::max(alpha, score);
-        } else {
+        }
+        else {
             if (score <= alpha) {
                 return score;
             }
@@ -165,7 +181,6 @@ int AI::alphabeta(std::vector<std::vector<char>> matrix, int depth, int alpha, i
     return best;
 }
 
-// bool AI::checkWinner(uint256_t &matrix, uint256_t &bits, int &depth)
 bool AI::checkWinner(uint256_t &bits, int &depth)
 {
     // if(this.totalMoves + depth < 9){
@@ -176,7 +191,7 @@ bool AI::checkWinner(uint256_t &bits, int &depth)
     //     return checkCache('winners', bits);
     // }
 
-    if(hasWon(bits)){
+    if (hasWon(bits)) {
         // putCache('winners', bits, true);
         return true;
     }
@@ -189,19 +204,18 @@ bool AI::hasWon(const uint256_t &matrix)
 {
     uint256_t h = 31;
     uint256_t v = 1152956690052710401;
-    // uint256_t d1 = 18447025552981295105;
-    uint256_t d1 = 281479271743489;
+    uint256_t d1 = 281479271743489; // should be 18447025552981295105 but compiller said NO!!!
     d1 *= 65536;
     d1 += 1;
     uint256_t d2 = 1152991877646254096;
 
-    if(matchBitmask(matrix, h)) return true;
-    if(matchBitmask(matrix, d1)) return true;
-    if(matchBitmask(matrix, d2)) return true;
+    if (matchBitmask(matrix, h)) return true;
+    if (matchBitmask(matrix, d1)) return true;
+    if (matchBitmask(matrix, d2)) return true;
 
     // vertical is a "bit" different :)
-    while(v <= matrix) {
-        if((v & matrix) == v) return true;
+    while (v <= matrix) {
+        if ((v & matrix) == v) return true;
         v *= 2;
     }
 
@@ -210,38 +224,19 @@ bool AI::hasWon(const uint256_t &matrix)
 
 bool AI::matchBitmask(const uint256_t &matrix, uint256_t &mask)
 {
-    for(size_t i = 0; mask <= matrix; i++, mask *= 2){
-        if((i % 15) > 10) continue;
-        if((mask & matrix) == mask) return true;
+    for (size_t i = 0; mask <= matrix; i++, mask *= 2) {
+        if ((i % 15) > 10) continue;
+        if ((mask & matrix) == mask) return true;
     }
 
     return false;
 }
 
-size_t calcStreak(int streak) {
-    size_t pointArray[6] = {0, 2, 8, 64, 512, 9999};
-    return (pointArray[streak]);
-}
-
-
-size_t calcVertical(uint256_t vMask, const uint256_t &matrix) {
-    int streak = 0;
-    int total = 0;
-
-    while (vMask <= matrix) {
-        if ((vMask & matrix) == vMask) {
-            streak++;
-            total += calcStreak(streak);
-        } else {
-            streak = 0;
-        }
-        vMask *= 32768;
-    }
-    return total;
-}
-
 size_t AI::staticEval(const uint256_t &matrix)
 {
+    // if(checkCache('evals', matrix)){
+    //     return checkCache('evals', matrix);
+    // }
 
     size_t total = 0;
     uint256_t hMask = 3;
@@ -253,9 +248,14 @@ size_t AI::staticEval(const uint256_t &matrix)
     total += matchMask(d1Mask, matrix);
     total += matchMask(d2Mask, matrix);
 
-    for (int i = 0; i < 15; i++, vMask *= 2) {
-        total += calcVertical(vMask, matrix);
+    while (vMask <= matrix) {
+        if ((vMask & matrix) == vMask) {
+            total++;
+        }
+        vMask *= 2;
     }
+
+    //putCache('evals', matrix, total);
 
     return total;
 }
@@ -263,20 +263,75 @@ size_t AI::staticEval(const uint256_t &matrix)
 size_t AI::matchMask(uint256_t &mask, const uint256_t &matrix)
 {
     size_t count = 0;
-    int streak = 0;
 
-    for(size_t i = 0; mask <= matrix; i++, mask *= 2){
-        if((i%15) > 13) continue;
-        if((mask & matrix) == mask) {
-            streak++;
-            count += calcStreak(streak);
-        } else {
-            streak = 0;
-        }
+    for (size_t i = 0; mask <= matrix; i++, mask *= 2) {
+        if ((i % 15) > 10) continue;
+        if ((mask & matrix) == mask) count++;
     }
 
     return count;
 }
+
+// size_t AI::staticEval(const uint256_t &matrix)
+// {
+
+//     size_t total = 0;
+//     uint256_t hMask = 3;
+//     uint256_t vMask = 32769;
+//     uint256_t d1Mask = 65537;
+//     uint256_t d2Mask = 16385;
+
+//     total += matchMask(hMask, matrix);
+//     total += matchMask(d1Mask, matrix);
+//     total += matchMask(d2Mask, matrix);
+
+//     for (int i = 0; i < 15; i++, vMask *= 2) {
+//         total += calcVertical(vMask, matrix);
+//     }
+
+//     return total;
+// }
+
+// size_t AI::matchMask(uint256_t &mask, const uint256_t &matrix)
+// {
+//     size_t count = 0;
+//     int streak = 0;
+
+//     for (size_t i = 0; mask <= matrix; i++, mask *= 2) {
+//         if ((i%15) > 13) continue;
+//         if ((mask & matrix) == mask) {
+//             streak++;
+//             count += calcStreak(streak);
+//         }
+//         else {
+//             streak = 0;
+//         }
+//     }
+
+//     return count;
+// }
+
+// size_t AI::calcVertical(uint256_t vMask, const uint256_t &matrix) {
+//     int streak = 0;
+//     int total = 0;
+
+//     while (vMask <= matrix) {
+//         if ((vMask & matrix) == vMask) {
+//             streak++;
+//             total += calcStreak(streak);
+//         }
+//         else {
+//             streak = 0;
+//         }
+//         vMask *= 32768;
+//     }
+//     return total;
+// }
+
+// size_t AI::calcStreak(int streak) {
+//     size_t pointArray[6] = {0, 2, 8, 64, 512, 9999};
+//     return (pointArray[streak]);
+// }
 
 extern "C" {
     int ai(int **board) {
@@ -294,7 +349,7 @@ extern "C" {
         uint256_t Player_2_bits = 0;
 
         for (int i = (int)(boardPP.size() - 1); i >= 0; i--) {
-            for(int j = (int)(boardPP[i].size() - 1); j >= 0; j--) {
+            for (int j = (int)(boardPP[i].size() - 1); j >= 0; j--) {
 
                 if (boardPP[i][j] == 1)
                     Player_1_bits = (Player_1_bits << 1) | 1;
@@ -450,7 +505,8 @@ int main(void)
         for (int y = 0; y < 15; y++)
             data[x][y] = 0;
 
-    data[0][0] = 1;
+    // data[0][0] = 1;
+    data[10][1] = 1;
 
 /*
     data[0][0] = 1;
