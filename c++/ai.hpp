@@ -9,6 +9,7 @@
 #define AI_HPP
 
 #include <vector>
+#include <list>
 #include <array>
 #include <tuple>
 #include <algorithm>
@@ -17,6 +18,11 @@
 #include "./uint256/uint256_t.h"
 // #include "Score.hpp"
 #include "WinChecker.hpp"
+#include "./include/ThreadPool.hpp"
+#include "./include/GameState.hpp"
+#include "./include/circular_buffer.hpp"
+
+#define MAX_GAME_MEM 200
 
 class AI {
     public:
@@ -35,6 +41,8 @@ class AI {
         size_t matchMask(uint256_t &mask, const uint256_t &matrix);
         // size_t calcVertical(uint256_t vMask, const uint256_t &matrix);
         // size_t calcStreak(int streak);
+
+        int alphabeta_thread(std::list<ThreadPool>::iterator thread_it);
 
 
 
@@ -57,7 +65,11 @@ class AI {
         char _AI_Color;
         char _Enemy_Color;
         // size_t totalCalcs = 0;
-
+        std::list<ThreadPool> thread_pool; // why not a vector or array ???
+        // std::list<GameState> thread_memory_space; // HAS TO BE A LIST!!!
+        Circular_buffer<GameState *, MAX_GAME_MEM> game_memory_space_waiting;
+        Circular_buffer<GameState *, MAX_GAME_MEM> game_memory_space_working;
+        // maybe add a pool of init GameState here to save time.
 
         int MAX_DEPTH = 4;
         int INFINITY = 100000;
