@@ -50,7 +50,11 @@ std::pair<int, int> AI::bestMove(uint256_t humanBits, uint256_t cpuBits)
     int alpha = NINFINITY;
     int beta = INFINITY;
     int bestScore = NINFINITY;
-
+    for (size_t i = 0; i < squares.size(); i++) {
+        int y = squares[i].first;
+        int x = squares[i].second;
+        std::cout << "With Y:" << x << " X:" << y << std::endl;
+    }
     for (size_t i = 0; i < squares.size(); i++) {
         int y = squares[i].first;
         int x = squares[i].second;
@@ -83,7 +87,7 @@ std::pair<int, int> AI::bestMove(uint256_t humanBits, uint256_t cpuBits)
 std::vector<std::pair<int, int>> AI::getSquaresToCheck(const std::vector<std::vector<char>> &my_board)
 {
     std::vector<std::pair<int, int>> rsl;
-    std::vector<char> tmp_rsl;
+    std::vector<unsigned char> tmp_rsl;
 
     for (size_t y = 0; y < my_board.size(); y++) {
         for (size_t x = 0; x < my_board[y].size(); x++) {
@@ -107,7 +111,7 @@ std::vector<std::pair<int, int>> AI::getSquaresToCheck(const std::vector<std::ve
     return rsl;
 }
 
-void AI::addAdjacent(const char y, const char x, std::vector<char> &list, const std::vector<std::vector<char>> &my_board) // can be multi threaded
+void AI::addAdjacent(const char y, const char x, std::vector<unsigned char> &list, const std::vector<std::vector<char>> &my_board) // can be multi threaded
 {
     put((y + 1), x, list, my_board);
     put((y - 1), x, list, my_board);
@@ -119,7 +123,7 @@ void AI::addAdjacent(const char y, const char x, std::vector<char> &list, const 
     put((y + 1), (x - 1), list, my_board);
 }
 
-void AI::put(const char y, const char x, std::vector<char> &list, const std::vector<std::vector<char>> &my_board)
+void AI::put(const char y, const char x, std::vector<unsigned char> &list, const std::vector<std::vector<char>> &my_board)
 {
     char combination = ((y << 4) | x);
     for(int i = 0; i < list.size(); i++)
