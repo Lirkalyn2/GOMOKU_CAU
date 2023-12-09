@@ -13,18 +13,45 @@ AI::AI(std::vector<std::vector<char>> board, char Ai_color, char Enemy_Color)
     _board = board;
     _AI_Color = Ai_color;
     _Enemy_Color = Enemy_Color;
+    std::list<ThreadPool>::iterator thread_it;
+    GameState *data;
 
-    // std::list<ThreadPool>::iterator thread_it;
+    for(int i = 0; i < MAIN_THREADS_NUMBER; i++) {
+        main_square_thread_pool.push_back(ThreadPool());
+        thread_it = main_square_thread_pool.end();
+        thread_it--;
+        thread_it->game_calculator_thread = std::thread(&AI::alphabeta_thread, this, thread_it);
+        thread_it->game_calculator_thread.detach();
+    }
 
-    // for(int i = 0; i < THREAD_NUMBER; i++) {
-    //     thread_pool.push_back(ThreadPool());
-    //     thread_it = thread_pool.end();
-    //     thread_it--;
-    //     thread_it->parity_calculator_thread = std::thread(&ParityMaker::ParityCalculater, this, thread_it, i);
-    //     thread_it->parity_calculator_thread.detach();
-    // }
+    for(int i = 0; i < LEAVES_THREADS_NUMBER; i++) {
+        leaves_thread_pool.push_back(ThreadPool());
+        thread_it = leaves_thread_pool.end();
+        thread_it--;
+        thread_it->game_calculator_thread = std::thread(&AI::leaves_thread, this, thread_it/*, the main thread personnalshared mutex*/);
+        thread_it->game_calculator_thread.detach();
+    }
+
+    for(int i = 0; i < MAX_MAIN_THREAD_MEM; i++) {
+        data = nullptr;
+        data = new GameState;
+        // data->matrix = new std::vector<std::vector<char>>();
+        main_square_memory_space.put(data);
+        // main_square_memory_space.put((*data));
+    }
+
+    for(int i = 0; i < MAX_LEAVES_MEM; i++) {
+        data = nullptr;
+        data = new GameState;
+        // data->matrix = new std::vector<std::vector<char>>();
+        leaves_memory_space.put(data);
+        // leaves_memory_space.put((*data));
+    }
+
+    main_square_memory_space.reset();
+    leaves_memory_space.reset();
     //     // allocate thread_memory_space
-    // use new on std::list and try to do it 
+    // use new on std::list and try to do it
 }
 
 AI::~AI()
@@ -37,67 +64,130 @@ std::pair<int, int> AI::bestMove(uint256_t humanBits, uint256_t cpuBits)
     int alpha = NINFINITY;
     int beta = INFINITY;
     int bestScore = NINFINITY;
-
-    // for (size_t i = 0; i < squares.size(); i++) {
-    //     std::cout << "y = " << squares[i].first << ", x = " << squares[i].second << std::endl;
-    // }
+    GameState *tmp = new GameState;
+    // std::list<std::pair<std::pair<int, int>, int>> moves; // inner most pair is for y and x, last one is the score.
+    std::vector<std::pair<std::pair<int, int>, int>> moves(squares.size(), std::make_pair(std::make_pair(0, 0), 0)); // inner most pair is for y and x, last one is the score.
+    // std::list<int> scores;
 
     for (size_t i = 0; i < squares.size(); i++) {
-        // init thred mem here.
-        // first change bord with y, x then copy it for the mutex. same for cpuBits.
-        // each thread needs it's own _board, alpha, beta, humanBits, cpuBits // put all in a std::list
-        // each square is a point on the queu, each point has locked the same shared mutex once and when the thread is done it free the shared mutex once.
-        // main thread it try lock this shared mutex, so it as to wait for all the shared to be done.
+        std::cout << "y = " << squares[i].first << ", x = " << squares[i].second << std::endl;
+    }
 
-
-        /*
-            put each of bestMove's squares in a separate thread. (first thread pool)
-            when a thread reaches the penultimate layer (right before max depth is reached), each of it's square should be put in a list to be multithreaded. (second thread pool)
-            when all the leaves, have been computed the main square thread can continue it's works until done.
-
-            for synchronisation, use shared mutex.
-            lock mains square's shared mutex x times (x being number of leaves) (use shared lock here).
-            put the leaves in the right  place to be computed
-            ask to lock the shared mutex and wait for the mutex to be available (use NOT shared lock here)
-            // end of main square's work
-
-            now on the leaf side
-            when leaf is computed
-            store result
-            unlock shared mutex once. (use shared unlock here)
-            take new leaf
-            // end of leaf's work
-        */
-
-
+    for (size_t i = 0; i < squares.size(); i++) {
         int y = squares[i].first;
         int x = squares[i].second;
+        moves[i].first.first = y;
+        moves[i].first.second = x;
         uint256_t pos = uint256_t((y * 15) + x);
 
         _board[y][x] = -1;
-        // std::cout << "1 " << y << ", " << x << " = " << cpuBits << "!!!" << std::endl;
         cpuBits |= 1 << pos;
-        int score = alphabeta(_board, 1, alpha, beta, false, humanBits, cpuBits);
 
-        // std::cout << "Final score for X:" << x << " et Y:" << y << " score:" << score << " Fore evaluation : " << staticEval(humanBits) << " evel" << staticEval(cpuBits) << std::endl;
+        tmp->matrix = _board; // may need a deep copy here.
+        // for (size_t j = 0; j < _board.size(); j++)
+        //     for (size_t k = 0; k < _board[j].size(); k++)
+        //         tmp->matrix[j][k] = _board[j][k];
+
+        // std::cout << "alpha = " << static_cast<void *>(&((*tmp).matrix[0][0])) << std::endl;
+        std::cout << "matrix_alpha = " << static_cast<void *>(&tmp->matrix) << std::endl;
+        // std::cout << "alpha = " << static_cast<void *>(&(&tmp.matrix[0])) << std::endl;
+        std::cout << "board_alpha = " << static_cast<void *>(&_board) << std::endl;
+        std::cout << "board_alpha[0][0] = " << static_cast<void *>(&_board[0][0]) << std::endl;
+        std::cout << std::endl;
+
+
+
+        tmp->depth = 1; // may need a deep copy here.
+        tmp->alpha = alpha; // may need a deep copy here.
+        tmp->beta = beta; // may need a deep copy here.
+        tmp->isAiTurn = false; // may need a deep copy here.
+        tmp->playerBits = humanBits; // may need a deep copy here.
+        tmp->opponentBits = cpuBits; // may need a deep copy here.
+        tmp->move = (moves.begin() + i); // may need a deep copy here.
+        main_square_flag.lock_shared();
+        while (main_square_memory_space.full()); // wait for space to liberate.
+        main_square_memory_space.swap_head_value(tmp);
+
 
         _board[y][x] = 0;
-        cpuBits &= ~(1 << pos); // check if cpuBits changes!!! // always stays the same
-        // std::cout << "2 " << y << ", " << x << " = " << cpuBits << "!!!" << std::endl;
+        cpuBits &= ~(1 << pos);
+    }
 
-        // end of thread.
+    main_square_flag.lock(); // for the thread to finish their work.
 
-        // if we find a win, play it immediately
-        if (score == 9999) {
-            return std::make_pair(y, x);
+    for (size_t i = 0; i < moves.size(); i++) {
+        // moves[1];
+        if (moves[i].second == 9999) {
+            return std::make_pair(moves[i].first.first, moves[i].first.second);
         }
 
-        if (score > bestScore) {
-            alpha = score;
-            bestScore = score;
-            move = std::make_pair(y, x);
+        if (moves[i].second > bestScore) {
+            alpha = moves[i].second;
+            bestScore = moves[i].second;
+            move = std::make_pair(moves[i].first.first, moves[i].first.second);
         }
     }
+
+    // for (size_t i = 0; i < squares.size(); i++) {
+    //     // init thred mem here.
+    //     // first change bord with y, x then copy it for the mutex. same for cpuBits.
+    //     // each thread needs it's own _board, alpha, beta, humanBits, cpuBits // put all in a std::list
+    //     // each square is a point on the queu, each point has locked the same shared mutex once and when the thread is done it free the shared mutex once.
+    //     // main thread it try lock this shared mutex, so it as to wait for all the shared to be done.
+
+
+    //     /*
+    //         put each of bestMove's squares in a separate thread. (first thread pool)
+    //         when a thread reaches the penultimate layer (right before max depth is reached), each of it's square should be put in a list to be multithreaded. (second thread pool)
+    //         when all the leaves, have been computed the main square thread can continue it's works until done.
+
+    //         for synchronisation, use shared mutex.
+    //         lock mains square's shared mutex x times (x being number of leaves) (use shared lock here).
+    //         put the leaves in the right  place to be computed
+    //         ask to lock the shared mutex and wait for the mutex to be available (use NOT shared lock here)
+    //         // end of main square's work
+
+    //         now on the leaf side
+    //         when leaf is computed
+    //         store result
+    //         unlock shared mutex once. (use shared unlock here)
+    //         take new leaf
+    //         // end of leaf's work
+
+    //         // maybe separate the leaf in different smaller circular buffer to avoid to much fight on the mutex.
+
+    //         // bonus, when a main thread is waiting for it's leaves, it's square can go in a waiiting pool and the thread takes anew square.
+    //     */
+
+
+    //     int y = squares[i].first;
+    //     int x = squares[i].second;
+    //     uint256_t pos = uint256_t((y * 15) + x);
+
+    //     _board[y][x] = -1;
+    //     // std::cout << "1 " << y << ", " << x << " = " << cpuBits << "!!!" << std::endl;
+    //     cpuBits |= 1 << pos;
+    //     int score = alphabeta(_board, 1, alpha, beta, false, humanBits, cpuBits);
+
+    //     // std::cout << "Final score for X:" << x << " et Y:" << y << " score:" << score << " Fore evaluation : " << staticEval(humanBits) << " evel" << staticEval(cpuBits) << std::endl;
+
+    //     _board[y][x] = 0;
+    //     cpuBits &= ~(1 << pos); // check if cpuBits changes!!! // always stays the same
+    //     // std::cout << "2 " << y << ", " << x << " = " << cpuBits << "!!!" << std::endl;
+
+    //     // end of thread.
+
+    //     // if we find a win, play it immediately
+    //     if (score == 9999) {
+    //         return std::make_pair(y, x);
+    //     }
+
+    //     if (score > bestScore) {
+    //         alpha = score;
+    //         bestScore = score;
+    //         move = std::make_pair(y, x);
+    //     }
+    // }
     return move;
 }
 
@@ -383,9 +473,33 @@ size_t AI::matchMask(uint256_t &mask, const uint256_t &matrix)
 int AI::alphabeta_thread(std::list<ThreadPool>::iterator thread_it) // switch to void
 {
     GameState *data = new GameState();
+    thread_it->stop = new std::mutex(); // maybe put that in its initialiser
 
     while (thread_it->is_alive) {
-        const std::lock_guard<std::mutex> lock(thread_it->stop);
+        const std::lock_guard<std::mutex> lock(*thread_it->stop);
+
+        if (!main_square_memory_space.empty() && main_square_memory_space.swap_tail_value(data)) {
+        //     std::cout << "thread_alpha = " << static_cast<void *>(&data->matrix) << std::endl;
+
+        //     std::cout << data->alpha << std::endl;
+        //     std::cout << data->matrix[0][0] << std::endl;
+        //     // std::cout << data->beta << std::endl;
+        //     for (int x = 0; x < 15; x++) {
+        // //         std::vector<char> tmp(15);
+        //         for (int y = 0; y < 15; y++) {
+        //             std::cout << data->matrix[x][y] << " ";
+        //         }
+        //         std::cout << std::endl;
+        //     }
+
+
+            // data->move->second = alphabeta(data->matrix, data->depth, data->alpha, data->beta, data->isAiTurn, data->playerBits, data->opponentBits);
+            data->move->second = alphabeta(data->matrix, data->depth, data->alpha, data->beta, data->isAiTurn, data->playerBits, data->opponentBits);
+            main_square_flag.unlock_shared();
+            std::cout << "unlock" << std::endl;
+        }
+        // maybe sleep here;
+        std::this_thread::sleep_for(std::chrono::duration<float>(1)); // need shorter sleep
 
     //     if (!game_memory_space_working.empty() && game_memory_space_working.swap_tail_value(data)) {
     //         // compute
@@ -518,6 +632,12 @@ int AI::alphabeta_thread(std::list<ThreadPool>::iterator thread_it) // switch to
     //         // compute
     //     }
     }
+    return 0;
+}
+
+int AI::leaves_thread(std::list<ThreadPool>::iterator thread_it)
+{
+    return 0;
 }
 
 extern "C" {
@@ -552,6 +672,7 @@ extern "C" {
 
         AI test_player_2(boardPP, 2, 1);
         std::pair<int, int> rsl = test_player_2.bestMove(Player_1_bits, Player_2_bits);
+        std::cout << "end = " << ((rsl.first * 100) + rsl.second) << std::endl;
 
 
         return ((rsl.first * 100) + rsl.second);

@@ -14,6 +14,7 @@
 #include <tuple>
 #include <algorithm>
 #include <iostream>
+#include <iterator>
 
 #include "./uint256/uint256_t.h"
 // #include "Score.hpp"
@@ -22,7 +23,10 @@
 #include "./include/GameState.hpp"
 #include "./include/circular_buffer.hpp"
 
-#define MAX_GAME_MEM 200
+#define MAIN_THREADS_NUMBER 8
+#define LEAVES_THREADS_NUMBER 24
+#define MAX_MAIN_THREAD_MEM 50
+#define MAX_LEAVES_MEM 200
 
 class AI {
     public:
@@ -43,6 +47,7 @@ class AI {
         // size_t calcStreak(int streak);
 
         int alphabeta_thread(std::list<ThreadPool>::iterator thread_it);
+        int leaves_thread(std::list<ThreadPool>::iterator thread_it);
 
 
 
@@ -65,11 +70,13 @@ class AI {
         char _AI_Color;
         char _Enemy_Color;
         // size_t totalCalcs = 0;
-        std::list<ThreadPool> main_square_thread_pool; // why not a vector or array ???
+        std::list<ThreadPool> main_square_thread_pool; // why not a vector or array ??? // they need their own shared mutex.
         std::list<ThreadPool> leaves_thread_pool; // why not a vector or array ???
-        // std::list<GameState> thread_memory_space; // HAS TO BE A LIST!!!
-        Circular_buffer<GameState *, MAX_GAME_MEM> leaves_memory_space;
+        // // std::list<GameState> main_square_memory_space; // HAS TO BE A LIST!!!
+        Circular_buffer<GameState *, MAX_MAIN_THREAD_MEM> main_square_memory_space;
+        Circular_buffer<GameState *, MAX_LEAVES_MEM> leaves_memory_space;
         // maybe add a pool of init GameState here to save time.
+        std::shared_mutex main_square_flag;
 
         int MAX_DEPTH = 4;
         int INFINITY = 100000;

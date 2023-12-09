@@ -18,7 +18,7 @@ class Circular_buffer {
     public:
         explicit Circular_buffer();
         void put(T data);
-		void swap_head_value(T &new_data);
+		bool swap_head_value(T &new_data);
 		std::optional<T> get();
 		bool swap_tail_value(T &new_data);
         void reset();
@@ -55,15 +55,23 @@ void Circular_buffer<T, lenght>::put(T data)
 }
 
 template <class T, long int lenght>
-void Circular_buffer<T, lenght>::swap_head_value(T &new_data)
+bool Circular_buffer<T, lenght>::swap_head_value(T &new_data)
 {
 	std::lock_guard<std::mutex> lock(circular_buffer_protector);
 
-	std::swap(buffer[head], new_data);
-	if (is_full)
-		tail = ((tail + 1) % max_size);
-	head = ((head + 1) % max_size);
-	is_full = (head == tail);
+	if (!is_full) {
+		std::swap(buffer[head], new_data);
+		head = ((head + 1) % max_size);
+		is_full = (head == tail);
+		return true;
+	}
+	return false;
+
+	// std::swap(buffer[head], new_data);
+	// if (is_full)
+	// 	tail = ((tail + 1) % max_size);
+	// head = ((head + 1) % max_size);
+	// is_full = (head == tail);
 }
 
 template <class T, long int lenght>
