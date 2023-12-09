@@ -20,6 +20,10 @@ while(not Done):
     set_board_clib(x, c_lib)
     no_move = False
     x.display()
+#    x.putPiece(1, 0, 1)
+#    x.putPiece(2, 0, 1)
+#    x.putPiece(3, 0, 1)
+#    x.putPiece(1, 0)
     P1Piece = input("Where do you want to put your piece? ").split()
     if (len(P1Piece) != 2 # make sure that we have two coordinate.
         or len(P1Piece[0]) != 1 # check that there is only one char where the letter should be for the column
