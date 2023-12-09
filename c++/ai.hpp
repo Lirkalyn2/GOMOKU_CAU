@@ -35,6 +35,9 @@ class AI {
         bool matchBitmask(const uint256_t &matrix, uint256_t &mask);
         size_t staticEval(const uint256_t &matrix);
         size_t matchMask(uint256_t &mask, const uint256_t &matrix);
+        void initialize(void);
+        uint countSetBits(unsigned char n);
+        size_t staticREval(const uint256_t &matrix, const uint256_t &opponentMatrix);
 
 
 

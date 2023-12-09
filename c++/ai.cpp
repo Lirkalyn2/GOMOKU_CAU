@@ -7,12 +7,37 @@
 
 #include "ai.hpp"
 #include <chrono>
+#include <cmath>
+
+uint256_t BitsSetTable256[256];
+
+// Function to initialise the lookup table
+void AI::initialize()
+{
+
+    // To initially generate the
+    // table algorithmically
+    BitsSetTable256[0] = 0;
+    for (int i = 0; i < 256; i++) {
+        BitsSetTable256[i] = (i & 1) +
+        BitsSetTable256[i / 2];
+    }
+}
+
+// Function to return the count
+// of set bits in n.
+// Original idea: https://www.geeksforgeeks.org/count-set-bits-in-an-integer/  3. Using lookup table
+uint AI::countSetBits(unsigned char n)
+{
+    return (BitsSetTable256[n]);
+}
 
 AI::AI(std::vector<std::vector<char>> board, char Ai_color, char Enemy_Color)
 {
     _board = board;
     _AI_Color = Ai_color;
     _Enemy_Color = Enemy_Color;
+    initialize();
 }
 
 AI::~AI()
@@ -33,9 +58,10 @@ std::pair<int, int> AI::bestMove(uint256_t humanBits, uint256_t cpuBits)
 
         _board[y][x] = -1;
         cpuBits |= 1 << pos;
+//        std::cout << "For X:" << x << " et Y:" << y << std::endl;
         int score = alphabeta(_board, 1, alpha, beta, false, humanBits, cpuBits);
 
-        std::cout << "Final score for X:" << x << " et Y:" << y << " score:" << score << " Fore evaluation : " << staticEval(humanBits) << " evel" << staticEval(cpuBits) << std::endl;
+        std::cout << "Final score for Y:" << x << " et X:" << y << " score:" << score << " Fore evaluation : " << staticEval(humanBits) << " evel" << staticEval(cpuBits) << std::endl;
 
         _board[y][x] = 0;
         cpuBits &= ~(1 << pos);
@@ -59,10 +85,10 @@ std::vector<std::pair<int, int>> AI::getSquaresToCheck(const std::vector<std::ve
     std::vector<std::pair<int, int>> rsl;
     std::vector<char> tmp_rsl;
 
-    for (size_t i = 0; i < my_board.size(); i++) {
-        for (size_t j = 0; j < my_board[i].size(); j++) {
-            if (my_board[j][i] != 0) {
-                addAdjacent(i, j, tmp_rsl, my_board);
+    for (size_t y = 0; y < my_board.size(); y++) {
+        for (size_t x = 0; x < my_board[y].size(); x++) {
+            if (my_board[y][x] != 0) {
+                addAdjacent(y, x, tmp_rsl, my_board);
             }
         }
     }
@@ -70,26 +96,27 @@ std::vector<std::pair<int, int>> AI::getSquaresToCheck(const std::vector<std::ve
 
     for (size_t i = 0; i < tmp_rsl.size(); i++) {
         // std::cout << "tmp_rsl[" << i << "] = " << (int)tmp_rsl[i] << std::endl;
-        int y = (tmp_rsl[i] & 0x0f);
-        int x = (tmp_rsl[i] >> 4);
-        if (my_board[y][x] <= 0) // band aid
+        int x = (tmp_rsl[i] & 0x0f);
+        int y = (tmp_rsl[i] >> 4);
+        std::cout << "Adding Y:" << y << " X:" << x << std::endl;
+        if (my_board[y][x] <= 0) { // band aid
+        std::cout << "Yes!" << std::endl;
             rsl.push_back(std::make_pair(y, x));
-            // rsl.push_back(std::make_pair((tmp_rsl[i] & 0x0f), (tmp_rsl[i] >> 4)));
-        // rsl.push_back(std::make_pair((tmp_rsl[i] >> 4), (tmp_rsl[i] & 0x0f)));
+        }
     }
     return rsl;
 }
 
-void AI::addAdjacent(const char i, const char j, std::vector<char> &list, const std::vector<std::vector<char>> &my_board) // can be multi threaded
+void AI::addAdjacent(const char y, const char x, std::vector<char> &list, const std::vector<std::vector<char>> &my_board) // can be multi threaded
 {
-    put((i + 1), j, list, my_board);
-    put((i - 1), j, list, my_board);
-    put(i, (j + 1), list, my_board);
-    put(i, (j - 1), list, my_board);
-    put((i + 1), (j + 1), list, my_board);
-    put((i - 1), (j + 1), list, my_board);
-    put((i - 1), (j - 1), list, my_board);
-    put((i + 1), (j - 1), list, my_board);
+    put((y + 1), x, list, my_board);
+    put((y - 1), x, list, my_board);
+    put(y, (x + 1), list, my_board);
+    put(y, (x - 1), list, my_board);
+    put((y + 1), (x + 1), list, my_board);
+    put((y - 1), (x + 1), list, my_board);
+    put((y - 1), (x - 1), list, my_board);
+    put((y + 1), (x - 1), list, my_board);
 }
 
 void AI::put(const char y, const char x, std::vector<char> &list, const std::vector<std::vector<char>> &my_board)
@@ -99,6 +126,7 @@ void AI::put(const char y, const char x, std::vector<char> &list, const std::vec
         if (list[i] == combination)
             return;
 
+//    std::cout << "For X:" << (int) x << " Y:" << (int) y << " " << (bool) (x >= 0 && x <= (char)(my_board.size() - 2)) << " " << (bool) (y >= 0 && y <= (char)(my_board.size() - 2)) << " " << (bool) (my_board[y][x] == 0) << std::endl;
     if ((x >= 0 && x <= (char)(my_board.size() - 2)) && (y >= 0 && y <= (char)(my_board.size() - 2)) && (my_board[y][x] == 0))
         list.push_back(combination);
 }
@@ -116,12 +144,14 @@ int AI::alphabeta(std::vector<std::vector<char>> matrix, int depth, int alpha, i
         if (checkWinner(playerBits, depth)) {
             return isAiTurn ? 9999 : -9999;
         } else {
-            size_t eval = staticEval(playerBits) - staticEval(opponentBits);
+//            size_t eval = staticEval(playerBits) - staticEval(opponentBits);
+            size_t eval = staticREval(playerBits, opponentBits) - staticREval(opponentBits, playerBits);
+            std::cout << "Comparative. Original:" /* << staticEval(playerBits) - staticEval(opponentBits)*/ << " and New:" << eval << std::endl;
             return isAiTurn ? eval : -eval;
         }
     }
 
-    int best = isAiTurn ? -9999 : 9999;
+        int best = isAiTurn ? -9999 : 9999;
     std::vector<std::pair<int, int>> squares = getSquaresToCheck(matrix);//, depth);
 
     for (size_t i = 0; i < squares.size(); i++) {
@@ -133,12 +163,13 @@ int AI::alphabeta(std::vector<std::vector<char>> matrix, int depth, int alpha, i
         matrix[y][x] = (isAiTurn ? -1 : 1);
         playerBits |= 1 << pos;
 
+//        std::cout << "For X:" << x << " et Y:" << y << std::endl;
         int score = alphabeta(matrix, (depth + 1), alpha, beta, !isAiTurn, opponentBits, playerBits);
 
         matrix[y][x] = 0;
         playerBits &= ~(1 << pos);
 
-        std::cout << "For X:" << x << " et Y:" << y << " score:" << score << " for " << (isAiTurn ? "us" : "human") << std::endl;
+        std::cout << "For Y:" << x << " et X:" << y << " score:" << score << " for " << (isAiTurn ? "us" : "human") << std::endl;
         if(isAiTurn){
             if (score >= beta) {
                 return score;
@@ -278,6 +309,88 @@ size_t AI::matchMask(uint256_t &mask, const uint256_t &matrix)
     return count;
 }
 
+// Prints n bits of this sequence in order.
+void printSequence(uint256_t sequence, int n, int endl) {
+    for (int i = n - 1, j = 0; i >= 0; i--, j++) {
+        bool bit = (sequence >> i) & 1;
+        std::cout << bit;
+        if ((j + 1) % endl == 0) {
+            std::cout << std::endl;
+        }
+    }
+}
+
+// Prendre les 5 bits uniquement et les mettre dans un char pour countSetBits()
+char extractSequence(uint256_t mask, int distance, int i) {
+    char sequence = 0;
+
+//    if (i == -1)
+//        printSequence(mask, 225, 15);
+    for (int i = 0; i < 5; i++) {
+        sequence = sequence | static_cast<bool>(mask & 1);
+        mask = mask >> distance;
+        sequence = sequence << 1;
+    }
+//    std::cout << "extractSequence yelds:" << (int) sequence << "and the distance is " << distance << std::endl;
+    return (sequence);
+}
+
+// En gros, on veut passer sur chaque case, et
+size_t AI::staticREval(const uint256_t &matrix, const uint256_t &opponentMatrix) {
+//    std::cout << "Enter REval, playerSequence is:" << std::endl;
+//    printSequence(matrix, 15 * 15, 15);
+    size_t total = 0;
+    uint256_t h = 31;
+    uint256_t v = 1152956690052710401;
+    // uint256_t d1 = 18447025552981295105;
+    uint256_t d1 = 281479271743489;
+    d1 *= 65536;
+    d1 += 1;
+    uint256_t d2 = 1152991877646254096;
+
+    uint256_t mask = 0;
+    uint256_t tmp = 0;
+    unsigned char sequence = 0;
+
+    // 15 * 15 - 5: limite théorique de ce qu'on va évaluer, à savoir le dernier point d'où 5 cases avec horizontales sont possibles.
+    // Au stratup, cela prendrait trop de temps pour chercher à travers les valeurs d'un uint256_t dans un array qui de toutes façons serait trop grand,
+    // Donc on doit extraire à la mano les 5 bits et ceux-ci uniquement et comparer ces derniers uniquement dans l'array.
+    for (size_t i = 0; i <= 220; i++, mask = mask << 1) {
+        tmp = matrix >> mask;
+//        std::cout << "I:" << i << " ";
+//        std::cout << (i % 15 <= 10) << "   ";
+//        std::cout << (i <= 165) << " ";
+//        std::cout << (((opponentMatrix >> mask) & v) == 0);// << std::endl;
+
+        if (i % 15 >= 4 && i <= 165 && ((opponentMatrix >> mask) & d2) == 0) { // Diagonale arrière
+//            std::cout << "dia arr" << std::endl;
+            sequence = extractSequence(tmp, 14, i);
+            total += calcStreak(countSetBits(sequence));
+        }
+        if (i % 15 <= 10 && i <= 161 && ((opponentMatrix >> mask) & d1) == 0) { // Diagonale avant
+//            std::cout << "dia av" << std::endl;
+            sequence = extractSequence(tmp, 16, i);
+            total += calcStreak(countSetBits(sequence));
+        }
+        if (i % 15 <= 10 && ((opponentMatrix >> mask) & h) == 0) { // Horizontale
+//            std::cout << "hor" << std::endl;
+            sequence = extractSequence(tmp, 1, i);
+            total += calcStreak(countSetBits(sequence));
+        }
+        if (i <= 165 && ((opponentMatrix >> mask) & v) == 0) { // Verticale
+            sequence = extractSequence(tmp, 15, (i == 0) ? -1 : i);
+            total += calcStreak(countSetBits(sequence));
+//            std::cout << "ver:" << (int) sequence << ", Bits:" << countSetBits(sequence) << ", Tot: " << total << std::endl;
+        }
+        if (mask == 0) {
+            mask = 1;
+        }
+    }
+//    std::cout << "Pong:" << total << std::endl;
+//    std::cout << "Exit REval" << std::endl;
+    return (total);
+}
+
 extern "C" {
     int ai(int **board) {
         std::vector<std::vector<char>> boardPP(15);
@@ -311,7 +424,7 @@ extern "C" {
         AI test_player_2(boardPP, 2, 1);
         std::pair<int, int> rsl = test_player_2.bestMove(Player_1_bits, Player_2_bits);
 
-
+        std::cout << "Returning " << rsl.first << " " << rsl.second << std::endl;
         return ((rsl.first * 100) + rsl.second);
         // return std::to_string(rsl.first) + " " + std::to_string(rsl.second);
 
@@ -452,13 +565,13 @@ int main(void)
 
     data[0][0] = 1;
 
-/*
-    data[0][0] = 1;
+
+//    data[0][0] = 1;
     data[0][1] = 1;
     data[0][2] = 1;
     data[0][3] = 1;
-    data[0][4] = 1;
-*/
+//    data[0][4] = 1;
+
 
 /*
     data[0][0] = 1;
