@@ -21,6 +21,7 @@ AI::AI(std::vector<std::vector<char>> board, char Ai_color, char Enemy_Color)
         thread_it = main_square_thread_pool.end();
         thread_it--;
         thread_it->game_calculator_thread = std::thread(&AI::alphabeta_thread, this, thread_it);
+        thread_it->stop = new std::mutex();
         thread_it->game_calculator_thread.detach();
     }
 
@@ -28,35 +29,34 @@ AI::AI(std::vector<std::vector<char>> board, char Ai_color, char Enemy_Color)
         leaves_thread_pool.push_back(ThreadPool());
         thread_it = leaves_thread_pool.end();
         thread_it--;
-        thread_it->game_calculator_thread = std::thread(&AI::leaves_thread, this, thread_it/*, the main thread personnalshared mutex*/);
+        thread_it->game_calculator_thread = std::thread(&AI::leaves_thread, this, thread_it);
+        thread_it->stop = new std::mutex();
+        thread_it->stop->lock();
+        thread_it->stop->unlock();
         thread_it->game_calculator_thread.detach();
     }
 
     for(int i = 0; i < MAX_MAIN_THREAD_MEM; i++) {
         data = nullptr;
         data = new GameState;
-        // data->matrix = new std::vector<std::vector<char>>();
         main_square_memory_space.put(data);
-        // main_square_memory_space.put((*data));
     }
 
     for(int i = 0; i < MAX_LEAVES_MEM; i++) {
         data = nullptr;
         data = new GameState;
-        // data->matrix = new std::vector<std::vector<char>>();
         leaves_memory_space.put(data);
-        // leaves_memory_space.put((*data));
     }
 
     main_square_memory_space.reset();
     leaves_memory_space.reset();
-    //     // allocate thread_memory_space
-    // use new on std::list and try to do it
 }
 
 AI::~AI()
 {
     GameState *data;
+
+    // also delete thread's mutex
 
     main_square_memory_space.act_full();
     leaves_memory_space.act_full();
@@ -81,9 +81,7 @@ std::pair<int, int> AI::bestMove(uint256_t humanBits, uint256_t cpuBits)
     int beta = INFINITY;
     int bestScore = NINFINITY;
     GameState *tmp = new GameState;
-    // std::list<std::pair<std::pair<int, int>, int>> moves; // inner most pair is for y and x, last one is the score.
     std::vector<std::pair<std::pair<int, int>, int>> moves(squares.size(), std::make_pair(std::make_pair(0, 0), 0)); // inner most pair is for y and x, last one is the score.
-    // std::list<int> scores;
 
     for (size_t i = 0; i < squares.size(); i++) {
         std::cout << "y = " << squares[i].first << ", x = " << squares[i].second << std::endl;
@@ -99,27 +97,14 @@ std::pair<int, int> AI::bestMove(uint256_t humanBits, uint256_t cpuBits)
         _board[y][x] = -1;
         cpuBits |= 1 << pos;
 
-        tmp->matrix = _board; // may need a deep copy here.
-        // for (size_t j = 0; j < _board.size(); j++)
-        //     for (size_t k = 0; k < _board[j].size(); k++)
-        //         tmp->matrix[j][k] = _board[j][k];
-
-        // std::cout << "alpha = " << static_cast<void *>(&((*tmp).matrix[0][0])) << std::endl;
-        std::cout << "matrix_alpha = " << static_cast<void *>(&tmp->matrix) << std::endl;
-        // std::cout << "alpha = " << static_cast<void *>(&(&tmp.matrix[0])) << std::endl;
-        std::cout << "board_alpha = " << static_cast<void *>(&_board) << std::endl;
-        std::cout << "board_alpha[0][0] = " << static_cast<void *>(&_board[0][0]) << std::endl;
-        std::cout << std::endl;
-
-
-
-        tmp->depth = 1; // may need a deep copy here.
-        tmp->alpha = alpha; // may need a deep copy here.
-        tmp->beta = beta; // may need a deep copy here.
-        tmp->isAiTurn = false; // may need a deep copy here.
-        tmp->playerBits = humanBits; // may need a deep copy here.
-        tmp->opponentBits = cpuBits; // may need a deep copy here.
-        tmp->move = (moves.begin() + i); // may need a deep copy here.
+        tmp->matrix = _board;
+        tmp->depth = 1;
+        tmp->alpha = alpha;
+        tmp->beta = beta;
+        tmp->isAiTurn = false;
+        tmp->playerBits = humanBits;
+        tmp->opponentBits = cpuBits;
+        tmp->move = (moves.begin() + i);
         main_square_flag.lock_shared();
         while (main_square_memory_space.full()); // wait for space to liberate.
         main_square_memory_space.swap_head_value(tmp);
@@ -132,7 +117,6 @@ std::pair<int, int> AI::bestMove(uint256_t humanBits, uint256_t cpuBits)
     main_square_flag.lock(); // for the thread to finish their work.
 
     for (size_t i = 0; i < moves.size(); i++) {
-        // moves[1];
         if (moves[i].second == 9999) {
             return std::make_pair(moves[i].first.first, moves[i].first.second);
         }
@@ -174,36 +158,7 @@ std::pair<int, int> AI::bestMove(uint256_t humanBits, uint256_t cpuBits)
 
     //         // bonus, when a main thread is waiting for it's leaves, it's square can go in a waiiting pool and the thread takes anew square.
     //     */
-
-
-    //     int y = squares[i].first;
-    //     int x = squares[i].second;
-    //     uint256_t pos = uint256_t((y * 15) + x);
-
-    //     _board[y][x] = -1;
-    //     // std::cout << "1 " << y << ", " << x << " = " << cpuBits << "!!!" << std::endl;
-    //     cpuBits |= 1 << pos;
-    //     int score = alphabeta(_board, 1, alpha, beta, false, humanBits, cpuBits);
-
-    //     // std::cout << "Final score for X:" << x << " et Y:" << y << " score:" << score << " Fore evaluation : " << staticEval(humanBits) << " evel" << staticEval(cpuBits) << std::endl;
-
-    //     _board[y][x] = 0;
-    //     cpuBits &= ~(1 << pos); // check if cpuBits changes!!! // always stays the same
-    //     // std::cout << "2 " << y << ", " << x << " = " << cpuBits << "!!!" << std::endl;
-
-    //     // end of thread.
-
-    //     // if we find a win, play it immediately
-    //     if (score == 9999) {
-    //         return std::make_pair(y, x);
-    //     }
-
-    //     if (score > bestScore) {
-    //         alpha = score;
-    //         bestScore = score;
-    //         move = std::make_pair(y, x);
-    //     }
-    // }
+    delete tmp;
     return move;
 }
 
@@ -275,59 +230,117 @@ int AI::alphabeta(std::vector<std::vector<char>> matrix, int depth, int alpha, i
         return isAiTurn ? -9999 : 9999;
     }
 
-    // stop at MAX_DEPTH
-    if (depth >= MAX_DEPTH) {
-        if (checkWinner(playerBits, depth)) {
-            return isAiTurn ? 9999 : -9999;
-        }
-        else {
-            size_t eval = staticEval(playerBits) - staticEval(opponentBits);
-            return isAiTurn ? eval : -eval;
-        }
-    }
-
     int best = isAiTurn ? -9999 : 9999;
     std::vector<std::pair<int, int>> squares = getSquaresToCheck(matrix);
 
-    // if (depth + 1) >= MAX_DEPTH put squares in mem pool.
-    // else for loop
+    if ((depth + 1) >= MAX_DEPTH) {
+        GameState *tmp = new GameState;
+        std::shared_mutex yolo_leaves_flag;
+        std::vector<std::pair<std::pair<int, int>, int>> moves(squares.size(), std::make_pair(std::make_pair(0, 0), 0)); // inner most pair is for y and x, last one is the score.
 
-    for (size_t i = 0; i < squares.size(); i++) {
-        int y = squares[i].first;
-        int x = squares[i].second;
-        uint256_t pos = ((y * 15) + x);
 
-        matrix[y][x] = (isAiTurn ? -1 : 1);
-        playerBits |= 1 << pos;
+        for (size_t i = 0; i < squares.size(); i++) {
+            int y = squares[i].first;
+            int x = squares[i].second;
+            uint256_t pos = ((y * 15) + x);
 
-        int score = alphabeta(matrix, (depth + 1), alpha, beta, !isAiTurn, opponentBits, playerBits);
+            matrix[y][x] = (isAiTurn ? -1 : 1);
+            playerBits |= 1 << pos;
 
-        matrix[y][x] = 0;
-        playerBits &= ~(1 << pos);
+            // playerBits, depth, isAiTurn, opponentBits
 
-        // std::cout << "For X:" << x << " et Y:" << y << " score:" << score << " for " << (isAiTurn ? "us" : "human") << std::endl;
-        if (isAiTurn) {
-            if (score >= beta) {
-                return score;
+
+            tmp->depth = (depth + 1); // may need a deep copy here.
+            // tmp->alpha = alpha; // may need a deep copy here.
+            // tmp->beta = beta; // may need a deep copy here.
+            tmp->isAiTurn = !isAiTurn; // may need a deep copy here.
+            tmp->playerBits = playerBits; // may need a deep copy here.
+            tmp->opponentBits = opponentBits; // may need a deep copy here.
+            tmp->move = (moves.begin() + i); // may need a deep copy here.
+            // main_square_flag.lock_shared();
+            yolo_leaves_flag.lock_shared();
+            tmp->yolo_leaves_flag = &yolo_leaves_flag;
+            while (leaves_memory_space.full()); // wait for space to liberate.
+            leaves_memory_space.swap_head_value(tmp);
+
+            // put in leaves mem
+
+            matrix[y][x] = 0;
+            playerBits &= ~(1 << pos);
+        }
+        delete tmp;
+        yolo_leaves_flag.lock();
+        for (size_t i = 0; i < moves.size(); i++) {
+            // moves[i].second;
+            if (isAiTurn) {
+                if (moves[i].second >= beta) {
+                    return moves[i].second;
+                }
+
+                best = std::max(moves[i].second, best);
+                alpha = std::max(alpha, moves[i].second);
+            }
+            else {
+                if (moves[i].second <= alpha) {
+                    return moves[i].second;
+                }
+
+                best = std::min(moves[i].second, best);
+                beta = std::min(beta, moves[i].second);
             }
 
-            best = std::max(score, best);
-            alpha = std::max(alpha, score);
+            if (moves[i].second == 9999 && isAiTurn) {
+                return moves[i].second;
+            }
+            else if (moves[i].second == -9999 && !isAiTurn) {
+                return moves[i].second;
+            }
         }
-        else {
-            if (score <= alpha) {
-                return score;
+    }
+    else {
+        for (size_t i = 0; i < squares.size(); i++) {
+            int y = squares[i].first;
+            int x = squares[i].second;
+            uint256_t pos = ((y * 15) + x);
+
+            matrix[y][x] = (isAiTurn ? -1 : 1);
+            playerBits |= 1 << pos;
+
+            // int score = 0;
+
+            // if ((depth + 1) >= MAX_DEPTH) {
+            //     // put data in leaves
+            // }
+            // else
+            int score = alphabeta(matrix, (depth + 1), alpha, beta, !isAiTurn, opponentBits, playerBits);
+
+            matrix[y][x] = 0;
+            playerBits &= ~(1 << pos);
+
+            // std::cout << "For X:" << x << " et Y:" << y << " score:" << score << " for " << (isAiTurn ? "us" : "human") << std::endl;
+            if (isAiTurn) {
+                if (score >= beta) {
+                    return score;
+                }
+
+                best = std::max(score, best);
+                alpha = std::max(alpha, score);
+            }
+            else {
+                if (score <= alpha) {
+                    return score;
+                }
+
+                best = std::min(score, best);
+                beta = std::min(beta, score);
             }
 
-            best = std::min(score, best);
-            beta = std::min(beta, score);
-        }
-
-        if (score == 9999 && isAiTurn) {
-            return score;
-        }
-        else if (score == -9999 && !isAiTurn) {
-            return score;
+            if (score == 9999 && isAiTurn) {
+                return score;
+            }
+            else if (score == -9999 && !isAiTurn) {
+                return score;
+            }
         }
     }
     return best;
@@ -489,165 +502,18 @@ size_t AI::matchMask(uint256_t &mask, const uint256_t &matrix)
 int AI::alphabeta_thread(std::list<ThreadPool>::iterator thread_it) // switch to void
 {
     GameState *data = new GameState();
-    thread_it->stop = new std::mutex(); // maybe put that in its initialiser
 
     while (thread_it->is_alive) {
         const std::lock_guard<std::mutex> lock(*thread_it->stop);
 
         if (!main_square_memory_space.empty() && main_square_memory_space.swap_tail_value(data)) {
-        //     std::cout << "thread_alpha = " << static_cast<void *>(&data->matrix) << std::endl;
 
-        //     std::cout << data->alpha << std::endl;
-        //     std::cout << data->matrix[0][0] << std::endl;
-        //     // std::cout << data->beta << std::endl;
-        //     for (int x = 0; x < 15; x++) {
-        // //         std::vector<char> tmp(15);
-        //         for (int y = 0; y < 15; y++) {
-        //             std::cout << data->matrix[x][y] << " ";
-        //         }
-        //         std::cout << std::endl;
-        //     }
-
-
-            // data->move->second = alphabeta(data->matrix, data->depth, data->alpha, data->beta, data->isAiTurn, data->playerBits, data->opponentBits);
             data->move->second = alphabeta(data->matrix, data->depth, data->alpha, data->beta, data->isAiTurn, data->playerBits, data->opponentBits);
             main_square_flag.unlock_shared();
             std::cout << "unlock" << std::endl;
         }
-        // maybe sleep here;
         std::this_thread::sleep_for(std::chrono::milliseconds(2)); // need shorter sleep
         // std::this_thread::sleep_for(std::chrono::duration<float>(1)); // need shorter sleep
-
-    //     if (!game_memory_space_working.empty() && game_memory_space_working.swap_tail_value(data)) {
-    //         // compute
-    //         // region basic compute
-    //         if (checkWinner(data->opponentBits, data->depth)) { // WinChecker(board, (isAiTurn ? _AI_Color : _Enemy_Color)).result();
-    //     //        std::cout << "Critical defeat! And a " << (isAiTurn ? " bad" : "good") << " one!!!" << std::endl;
-    //             data->score = data->isAiTurn ? -9999 : 9999;
-    //             data->gameStateProtector.unlock_shared();
-    //             // break from everything
-    //         }
-
-    //         // stop at MAX_DEPTH
-    //         if (data->depth >= MAX_DEPTH) {
-    //             if (checkWinner(data->playerBits, data->depth)) {
-    //                 data->score = data->isAiTurn ? 9999 : -9999;
-    //                 data->gameStateProtector.unlock_shared();
-    //                 // break from everything
-    //             }
-    //             else {
-    //                 size_t eval = staticEval(data->playerBits) - staticEval(data->opponentBits);
-    //                 data->score = data->isAiTurn ? eval : -eval;
-    //                 data->gameStateProtector.unlock_shared();
-    //                 // break from everything
-    //             }
-    //         }
-    //         // endregion basic compute. preferably
-
-    //         int best = data->isAiTurn ? -9999 : 9999;
-    //         std::vector<std::pair<int, int>> squares = getSquaresToCheck(data->matrix);
-    //         // endregion basic compute.
-
-    //         if (data->depth >= MAX_DEPTH) {
-    //             // compute alpha beta
-
-    //         }
-    //         else {
-    //             // std::vector<GameState *>::iterator results_it;
-    //             GameState *new_data = new GameState();
-
-    //             for (size_t i = 0; i < squares.size(); i++) {
-    //                 int y = squares[i].first;
-    //                 int x = squares[i].second;
-    //                 uint256_t pos = ((y * 15) + x);
-
-    //                 data->matrix[y][x] = (data->isAiTurn ? -1 : 1);
-    //                 data->playerBits |= 1 << pos;
-
-    //                 // // //alphabeta(matrix, (depth + 1), alpha, beta, !isAiTurn, opponentBits, playerBits);
-    //                 new_data->matrix = data->matrix; // may need a deep copy here.
-    //                 new_data->depth = (data->depth + 1);
-    //                 new_data->alpha = data->alpha;
-    //                 new_data->beta = data->beta;
-    //                 new_data->isAiTurn = !data->isAiTurn;
-    //                 new_data->opponentBits = data->opponentBits;
-    //                 new_data->playerBits = data->playerBits;
-    //                 new_data->gameStateProtector.lock_shared();// ??? should we lock this one or the one one above in the tree ???
-    //                 game_memory_space_working.swap_head_value(new_data);
-
-    //                 // // data->results.push_back(new GameState());
-    //                 // // results_it = data->results.end();
-    //                 // // results_it--;
-    //                 // // //alphabeta(matrix, (depth + 1), alpha, beta, !isAiTurn, opponentBits, playerBits);
-    //                 // results_it->matrix = matrix; // may need a deep copy here.
-    //                 // results_it->depth = (depth + 1);
-    //                 // results_it->alpha = alpha;
-    //                 // results_it->beta = beta;
-    //                 // results_it->isAiTurn = !isAiTurn;
-    //                 // results_it->opponentBits = opponentBits;
-    //                 // results_it->playerBits = playerBits;
-    //                 // results_it->gameStateProtector.lock_shared();// ??? should we lock this one or the one one above in the tree ???
-    //                 game_memory_space_working.swap_head_value(new_data);
-
-    // // std::list<ThreadPool>::iterator thread_it;
-
-    // // for(int i = 0; i < THREAD_NUMBER; i++) {
-    // //     thread_pool.push_back(ThreadPool());
-    // //     thread_it = thread_pool.end();
-    // //     thread_it--;
-    // //     thread_it->parity_calculator_thread = std::thread(&ParityMaker::ParityCalculater, this, thread_it, i);
-    // //     thread_it->parity_calculator_thread.detach();
-    // // }
-
-    //                 data->matrix[y][x] = 0;
-    //                 data->playerBits &= ~(1 << pos);
-    //             }
-    //             delete new_data; // ??? can we save it ???
-    //         }
-
-    //         // for (size_t i = 0; i < squares.size(); i++) {
-    //         //     // int y = squares[i].first;
-    //         //     // int x = squares[i].second;
-    //         //     // uint256_t pos = ((y * 15) + x);
-
-    //         //     // matrix[y][x] = (isAiTurn ? -1 : 1);
-    //         //     // playerBits |= 1 << pos;
-
-    //         //     // int score = alphabeta(matrix, (depth + 1), alpha, beta, !isAiTurn, opponentBits, playerBits);
-
-    //         //     // matrix[y][x] = 0;
-    //         //     // playerBits &= ~(1 << pos);
-
-    //         //     // std::cout << "For X:" << x << " et Y:" << y << " score:" << score << " for " << (isAiTurn ? "us" : "human") << std::endl;
-    //         //     if (isAiTurn) {
-    //         //         if (score >= beta) {
-    //         //             return score;
-    //         //         }
-
-    //         //         best = std::max(score, best);
-    //         //         alpha = std::max(alpha, score);
-    //         //     }
-    //         //     else {
-    //         //         if (score <= alpha) {
-    //         //             return score;
-    //         //         }
-
-    //         //         best = std::min(score, best);
-    //         //         beta = std::min(beta, score);
-    //         //     }
-
-    //         //     if (score == 9999 && isAiTurn) {
-    //         //         return score;
-    //         //     }
-    //         //     else if (score == -9999 && !isAiTurn) {
-    //         //         return score;
-    //         //     }
-    //         // }
-
-    //     }
-    //     else if (!game_memory_space_waiting.empty() && game_memory_space_waiting.swap_tail_value(data)) {
-    //         // compute
-    //     }
     }
     delete data;
     return 0;
@@ -655,7 +521,30 @@ int AI::alphabeta_thread(std::list<ThreadPool>::iterator thread_it) // switch to
 
 int AI::leaves_thread(std::list<ThreadPool>::iterator thread_it)
 {
-    return 0;
+    GameState *data = new GameState();
+
+    while (thread_it->is_alive) {
+        const std::lock_guard<std::mutex> lock(*thread_it->stop);
+
+        if (!leaves_memory_space.empty() && leaves_memory_space.swap_tail_value(data)) {
+
+            if (checkWinner(data->playerBits, data->depth)) {
+                data->move->second = data->isAiTurn ? 9999 : -9999;
+            }
+            else {
+                size_t eval = staticEval(data->playerBits) - staticEval(data->opponentBits);
+                data->move->second = data->isAiTurn ? eval : -eval;
+            }
+            data->yolo_leaves_flag->unlock_shared();
+
+            // data->move->second = alphabeta(data->matrix, data->depth, data->alpha, data->beta, data->isAiTurn, data->playerBits, data->opponentBits);
+            // data->move->second = alphabeta(data->matrix, data->depth, data->alpha, data->beta, data->isAiTurn, data->playerBits, data->opponentBits);
+            // main_square_flag.unlock_shared();
+            std::cout << "unlock leaves" << std::endl;
+        }
+        // maybe sleep here;
+        std::this_thread::sleep_for(std::chrono::milliseconds(2)); // need shorter sleep
+    }
 }
 
 extern "C" {
@@ -702,121 +591,6 @@ extern "C" {
         // return std::string();
     }
 }
-
-// extern "C" {
-//     bool ai(int **board) {
-//         std::vector<std::vector<char>> boardPP(15);
-
-//         for (int x = 0; x < 15; x++) {
-//             std::vector<char> tmp(15);
-//             for (int y = 0; y < 15; y++) {
-//                 tmp[y] = board[x][y];
-//                 // printf("%d", board[x][y]);
-//             }
-//             boardPP[x] = tmp;
-//         }
-
-//         // AI test(boardPP);
-//         std::chrono::steady_clock::time_point begin;
-//         std::chrono::steady_clock::time_point end;
-
-//         bool battle = true;
-//         uint256_t Player_1_bits = 0;
-//         uint256_t Player_2_bits = 0;
-
-//         while (battle) {
-
-//             Player_1_bits = 0;
-//             Player_2_bits = 0;
-//             for (int i = (int)(boardPP.size() - 1); i >= 0; i--) {
-//                 for(int j = (int)(boardPP[i].size() - 1); j >= 0; j--) {
-
-//                     if (boardPP[i][j] == 1)
-//                         Player_1_bits = (Player_1_bits << 1) | 1;
-//                     else
-//                         Player_1_bits = (Player_1_bits << 1);
-
-//                     if (boardPP[i][j] == 2)
-//                         Player_2_bits = (Player_2_bits << 1) | 1;
-//                     else
-//                         Player_2_bits = (Player_2_bits << 1);
-//                 }
-//             }
-//             std::cout << "Player_1_bits = " << Player_1_bits << std::endl;
-//             std::cout << "Player_2_bits = " << Player_2_bits << std::endl;
-
-
-
-//             AI test_player_2(boardPP, 2, 1);
-//             begin = std::chrono::steady_clock::now();
-//             auto rsl2 = test_player_2.bestMove(Player_1_bits, Player_2_bits);
-//             end = std::chrono::steady_clock::now();
-
-//             std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
-//             std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
-//             std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds> (end - begin).count() << "[ns]" << std::endl;
-
-//             std::cout << "Player 2" << " y = " << rsl2.first << ", z = " << rsl2.second << std::endl;
-//             boardPP[rsl2.first][rsl2.second] = 2;
-//             battle = !WinChecker(boardPP, 2).result();
-
-//             for (int x = 0; x < 15; x++) {
-//                 for (int y = 0; y < 15; y++)
-//                     std::cout << (int) boardPP[x][y] << " ";
-//                 std::cout << std::endl;
-//             }
-//             // battle = false;
-
-//             Player_1_bits = 0;
-//             Player_2_bits = 0;
-//             for (int i = (int)(boardPP.size() - 1); i >= 0; i--) {
-//                 for(int j = (int)(boardPP[i].size() - 1); j >= 0; j--) {
-
-//                     if (boardPP[i][j] == 1)
-//                         Player_1_bits = (Player_1_bits << 1) | 1;
-//                     else
-//                         Player_1_bits = (Player_1_bits << 1);
-
-//                     if (boardPP[i][j] == 2)
-//                         Player_2_bits = (Player_2_bits << 1) | 1;
-//                     else
-//                         Player_2_bits = (Player_2_bits << 1);
-//                 }
-//             }
-//             std::cout << "Player_1_bits = " << Player_1_bits << std::endl;
-//             std::cout << "Player_2_bits = " << Player_2_bits << std::endl;
-
-
-
-//             AI test_player_1(boardPP, 1, 2);
-//             begin = std::chrono::steady_clock::now();
-//             auto rsl1 = test_player_1.bestMove(Player_2_bits, Player_1_bits);
-//             end = std::chrono::steady_clock::now();
-
-//             std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
-//             std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
-//             std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds> (end - begin).count() << "[ns]" << std::endl;
-
-//             std::cout << "Player 1" << " y = " << rsl1.first << ", z = " << rsl1.second << std::endl;
-//             boardPP[rsl1.first][rsl1.second] = 1;
-//             battle = !WinChecker(boardPP, 1).result();
-
-//             for (int x = 0; x < 15; x++) {
-//                 for (int y = 0; y < 15; y++)
-//                     std::cout << (int) boardPP[x][y] << " ";
-//                 std::cout << std::endl;
-//             }
-//             // // battle = false;
-//         }
-
-
-
-//         int i = 0;
-
-//         //return WinChecker(boardPP, pieceNumber).result();
-//         return 0;
-//     }
-// }
 
 int main(void)
 {

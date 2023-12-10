@@ -24,6 +24,7 @@ class GameState { // 2856 bits or 357 bytes + 8 for the pointer
         bool isAiTurn;
         uint256_t playerBits; // 256
         uint256_t opponentBits; // 256
+        std::shared_mutex *yolo_leaves_flag; // 
         // std::shared_mutex gameStateProtector; // 448
         std::vector<std::pair<std::pair<int, int>, int>>::iterator move;
 
