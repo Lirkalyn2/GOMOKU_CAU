@@ -55,7 +55,23 @@ AI::AI(std::vector<std::vector<char>> board, char Ai_color, char Enemy_Color)
 }
 
 AI::~AI()
-{}
+{
+    GameState *data;
+
+    main_square_memory_space.act_full();
+    leaves_memory_space.act_full();
+
+    while (!main_square_memory_space.empty())
+    {
+        data = main_square_memory_space.get().value();
+        delete data;
+    }
+    while (!leaves_memory_space.empty())
+    {
+        data = leaves_memory_space.get().value();
+        delete data;
+    }
+}
 
 std::pair<int, int> AI::bestMove(uint256_t humanBits, uint256_t cpuBits)
 {
@@ -499,7 +515,8 @@ int AI::alphabeta_thread(std::list<ThreadPool>::iterator thread_it) // switch to
             std::cout << "unlock" << std::endl;
         }
         // maybe sleep here;
-        std::this_thread::sleep_for(std::chrono::duration<float>(1)); // need shorter sleep
+        std::this_thread::sleep_for(std::chrono::milliseconds(2)); // need shorter sleep
+        // std::this_thread::sleep_for(std::chrono::duration<float>(1)); // need shorter sleep
 
     //     if (!game_memory_space_working.empty() && game_memory_space_working.swap_tail_value(data)) {
     //         // compute
@@ -632,6 +649,7 @@ int AI::alphabeta_thread(std::list<ThreadPool>::iterator thread_it) // switch to
     //         // compute
     //     }
     }
+    delete data;
     return 0;
 }
 
