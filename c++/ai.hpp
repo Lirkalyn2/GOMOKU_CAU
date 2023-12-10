@@ -14,9 +14,13 @@
 #include <algorithm>
 #include <iostream>
 
+#include <functional>
+
 #include "./uint256/uint256_t.h"
+#include "./xxhashlib/xxhash.h"
 // #include "Score.hpp"
 #include "WinChecker.hpp"
+#include "ML.hpp"
 
 // #define MAX_DEPTH 4;
 
@@ -39,26 +43,15 @@ class AI {
         uint countSetBits(unsigned char n);
         size_t staticREval(const uint256_t &matrix, const uint256_t &opponentMatrix);
 
-
-
-        // std::pair<int, int> getNextMove();
-        // std::vector<std::pair<int, int>> getSquaresToCheck(std::vector<std::vector<char>> &my_board);
-        // bool isTouchingOccupied(const int &x, const int &y) const;
-        // bool occupied(const int &x, const int &y) const;
-
-        // int alphabeta(std::vector<std::vector<char>> &board, int depth, int alpha, int beta, bool isAiTurn);
-        // int staticEval(std::vector<std::vector<char>> &my_board);
-        // int horizontalScore(std::vector<std::vector<char>> &my_board);
-        // int verticalScore(std::vector<std::vector<char>> &my_board);
-        // int diagonalScore(std::vector<std::vector<char>> &my_board);
-        // void scoreConsecutive(char &block, char &current, size_t &streak, int &score);
-        // int adjacentBlockScore(const size_t &count) const;
-
+        XXH64_hash_t hashCalculator();
+        int turnCalculator();
     protected:
     private:
         std::vector<std::vector<char>> _board;
         char _AI_Color;
         char _Enemy_Color;
+        ML scores;
+        XXH64_state_t *hash_stream;
         // size_t totalCalcs = 0;
 
 
