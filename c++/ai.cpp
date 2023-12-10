@@ -70,22 +70,23 @@ std::pair<int, int> AI::bestMove(uint256_t humanBits, uint256_t cpuBits)
         cpuBits |= 1 << pos;
 
         XXH64_hash_t boardHash = hashCalculator();
-        std::cout << "boardHash = " << boardHash << std::endl << std::endl;
+        // std::cout << "boardHash = " << boardHash << std::endl << std::endl;
         std::pair<bool, int> ML_rsl = scores.getScore(boardHash, turnCalculator());
 
-        int score = 0;
+        int score = ML_rsl.second;
 
         if (!ML_rsl.first) {
             score = alphabeta(_board, 1, alpha, beta, false, humanBits, cpuBits);
             scores.putScore(boardHash, turnCalculator(), score);
+            std::cout << "NEW SCORE" << std::endl;
         }
-        else
-            score = ML_rsl.second;
+        // else
+        //     score = ML_rsl.second;
 
 //        std::cout << "For X:" << x << " et Y:" << y << std::endl;
         // int score = alphabeta(_board, 1, alpha, beta, false, humanBits, cpuBits);
 
-        std::cout << "Final score for Y:" << x << " et X:" << y << " score:" << score << " Fore evaluation : " << staticEval(humanBits) << " evel" << staticEval(cpuBits) << std::endl;
+        // std::cout << "Final score for Y:" << x << " et X:" << y << " score:" << score << " Fore evaluation : " << staticEval(humanBits) << " evel" << staticEval(cpuBits) << std::endl;
 
         // create entry, put score.
 
@@ -124,9 +125,9 @@ std::vector<std::pair<int, int>> AI::getSquaresToCheck(const std::vector<std::ve
         // std::cout << "tmp_rsl[" << i << "] = " << (int)tmp_rsl[i] << std::endl;
         int x = (tmp_rsl[i] & 0x0f);
         int y = (tmp_rsl[i] >> 4);
-        std::cout << "Adding Y:" << y << " X:" << x << std::endl;
+        // std::cout << "Adding Y:" << y << " X:" << x << std::endl;
         if (my_board[y][x] <= 0) { // band aid
-        std::cout << "Yes!" << std::endl;
+            // std::cout << "Yes!" << std::endl;
             rsl.push_back(std::make_pair(y, x));
         }
     }
@@ -172,7 +173,7 @@ int AI::alphabeta(std::vector<std::vector<char>> matrix, int depth, int alpha, i
         } else {
 //            size_t eval = staticEval(playerBits) - staticEval(opponentBits);
             size_t eval = staticREval(playerBits, opponentBits) - staticREval(opponentBits, playerBits);
-            std::cout << "Comparative. Original:" /* << staticEval(playerBits) - staticEval(opponentBits)*/ << " and New:" << eval << std::endl;
+            // std::cout << "Comparative. Original:" /* << staticEval(playerBits) - staticEval(opponentBits)*/ << " and New:" << eval << std::endl;
             return isAiTurn ? eval : -eval;
         }
     }
@@ -195,7 +196,7 @@ int AI::alphabeta(std::vector<std::vector<char>> matrix, int depth, int alpha, i
         matrix[y][x] = 0;
         playerBits &= ~(1 << pos);
 
-        std::cout << "For Y:" << x << " et X:" << y << " score:" << score << " for " << (isAiTurn ? "us" : "human") << std::endl;
+        // std::cout << "For Y:" << x << " et X:" << y << " score:" << score << " for " << (isAiTurn ? "us" : "human") << std::endl;
         if(isAiTurn){
             if (score >= beta) {
                 return score;
@@ -471,7 +472,7 @@ extern "C" {
         AI test_player_2(boardPP, 2, 1);
         std::pair<int, int> rsl = test_player_2.bestMove(Player_1_bits, Player_2_bits);
 
-        std::cout << "Returning " << rsl.first << " " << rsl.second << std::endl;
+        // std::cout << "Returning " << rsl.first << " " << rsl.second << std::endl;
         return ((rsl.first * 100) + rsl.second);
         // return std::to_string(rsl.first) + " " + std::to_string(rsl.second);
 

@@ -11,8 +11,23 @@
 #include <functional>
 #include <iostream>
 #include <algorithm>
+#include <vector>
 
 #include "./xxhashlib/xxhash.h"
+
+#define ML_VERSION 1
+
+struct ML_Parameters {
+    int version = 0;
+    unsigned int turn_number = 0;
+    // depth
+    //...
+};
+
+struct ML_Node {
+    XXH64_hash_t boardHash = 0;
+    int score = 0;
+};
 
 class ML {
     public:
@@ -25,7 +40,8 @@ class ML {
 
     protected:
     private:
-    std::vector<std::vector<std::pair<XXH64_hash_t, int>>> scores;
+        ML_Parameters parameters;
+        std::vector<std::vector<ML_Node>> scores;
     // structe to sotre hashes and resulting scores. (separet it by amount of turned passed)
 };
 
