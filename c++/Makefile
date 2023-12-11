@@ -16,7 +16,8 @@ STATIC_SRC = 	./uint256/uint128_t.cpp 	\
 
 SRC		=	WinChecker.cpp				\
 			ai.cpp						\
-			ML.cpp
+			ML.cpp						\
+			main.cpp
 
 OBJ		=	$(SRC:.cpp=.o)
 STATIC_OBJ		=	$(STATIC_SRC:.cpp=.o)
