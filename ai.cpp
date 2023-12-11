@@ -22,8 +22,6 @@ void AI::initialize()
         BitsSetTable256[i] = (i & 1) +
         BitsSetTable256[i / 2];
     }
-
-    hash_stream = XXH64_createState();
 }
 
 // Function to return the count
@@ -36,12 +34,53 @@ uint AI::countSetBits(unsigned char n)
 
 AI::AI()
 {
+    hash_stream = XXH64_createState();
+
+    std::list<ThreadPool>::iterator thread_it;
+    GameState *data;
+
+    for(int i = 0; i < MAIN_THREADS_NUMBER; i++) {
+        main_square_thread_pool.push_back(ThreadPool());
+        thread_it = main_square_thread_pool.end();
+        thread_it--;
+        thread_it->game_calculator_thread = std::thread(&AI::alphabeta_thread, this, thread_it);
+        thread_it->stop = new std::mutex();
+        thread_it->game_calculator_thread.detach();
+    }
+
+    for(int i = 0; i < MAX_MAIN_THREAD_MEM; i++) {
+        data = nullptr;
+        data = new GameState;
+        // data->matrix = new std::vector<std::vector<char>>();
+        main_square_memory_space.put(data);
+        // main_square_memory_space.put((*data));
+    }
+
+    main_square_memory_space.reset();
+
     initialize();
 }
 
 AI::~AI()
 {
     XXH64_freeState(hash_stream);
+
+    GameState *data;
+
+    main_square_memory_space.act_full();
+
+    // free thread's mutexes
+
+    while (!main_square_memory_space.empty())
+    {
+        data = main_square_memory_space.get().value();
+        delete data;
+    }
+
+    // for (size_t i = 0; i < main_square_thread_pool.size(); i++)
+    for (auto it = main_square_thread_pool.begin(); it != main_square_thread_pool.end(); it++) {
+        it->is_alive = false;
+    }
 }
 
 std::pair<int, int> AI::bestMove(std::vector<std::vector<char>> &board, uint256_t &humanBits, uint256_t &cpuBits)
@@ -51,6 +90,9 @@ std::pair<int, int> AI::bestMove(std::vector<std::vector<char>> &board, uint256_
     int alpha = MY_NINFINITY;
     int beta = MY_INFINITY;
     int bestScore = MY_NINFINITY;
+    GameState *tmp = new GameState;
+    std::vector<std::pair<std::pair<int, int>, int>> moves(squares.size(), std::make_pair(std::make_pair(0, 0), 0)); // inner most pair is for y and x, last one is the score.
+
 
     // for (size_t i = 0; i < squares.size(); i++) {
     //     int y = squares[i].first;
@@ -58,9 +100,13 @@ std::pair<int, int> AI::bestMove(std::vector<std::vector<char>> &board, uint256_
     //     std::cout << "With Y:" << x << " X:" << y << std::endl;
     // }
 
+
+
     for (size_t i = 0; i < squares.size(); i++) {
         int y = squares[i].first;
         int x = squares[i].second;
+        moves[i].first.first = y;
+        moves[i].first.second = x;
         uint256_t pos = uint256_t((y * 15) + x);
 
         board[y][x] = -1;
@@ -70,38 +116,89 @@ std::pair<int, int> AI::bestMove(std::vector<std::vector<char>> &board, uint256_
         // std::cout << "boardHash = " << boardHash << std::endl << std::endl;
         std::pair<bool, int> ML_rsl = scores.getScore(boardHash, turnCalculator(board));
 
-        int score = ML_rsl.second;
+        moves[i].second = ML_rsl.second;
 
         if (!ML_rsl.first) { // could find the answer in file
-            score = alphabeta(board, 1, alpha, beta, false, humanBits, cpuBits);
-            scores.putScore(boardHash, turnCalculator(board), score);
-            std::cout << "NEW SCORE" << std::endl;
+            tmp->matrix = board;
+            tmp->depth = 1;
+            tmp->alpha = alpha;
+            tmp->beta = beta;
+            tmp->isAiTurn = false;
+            tmp->playerBits = humanBits;
+            tmp->opponentBits = cpuBits;
+            tmp->boardHash = boardHash;
+            tmp->move = (moves.begin() + i);
+            main_square_flag.lock_shared();
+            while (main_square_memory_space.full()); // wait for space to liberate.
+            main_square_memory_space.swap_head_value(tmp);
+
+            // std::cout << "NEW SCORE" << std::endl;
         }
-        // else
-        //     score = ML_rsl.second;
 
-
-//        std::cout << "For X:" << x << " et Y:" << y << std::endl;
-        // int score = alphabeta(_board, 1, alpha, beta, false, humanBits, cpuBits);
-
-        // std::cout << "Final score for Y:" << x << " et X:" << y << " score:" << score << " Fore evaluation : " << staticEval(humanBits) << " evel" << staticEval(cpuBits) << std::endl;
-
-        // create entry, put score.
 
         board[y][x] = 0;
         cpuBits &= ~(1 << pos);
+    }
 
-        // if we find a win, play it immediately
-        if(score == 9999){
-            return std::make_pair(y, x);
+    main_square_flag.lock(); // for the thread to finish their work.
+
+    for (size_t i = 0; i < moves.size(); i++) {
+        if (moves[i].second == 9999) {
+            return std::make_pair(moves[i].first.first, moves[i].first.second);
         }
 
-        if(score > bestScore){
-            alpha = score;
-            bestScore = score;
-            move = std::make_pair(y, x);
+        if (moves[i].second > bestScore) {
+            alpha = moves[i].second;
+            bestScore = moves[i].second;
+            move = std::make_pair(moves[i].first.first, moves[i].first.second);
         }
     }
+
+
+
+
+//     for (size_t i = 0; i < squares.size(); i++) {
+//         int y = squares[i].first;
+//         int x = squares[i].second;
+//         uint256_t pos = uint256_t((y * 15) + x);
+
+//         board[y][x] = -1;
+//         cpuBits |= 1 << pos;
+
+//         XXH64_hash_t boardHash = hashCalculator(board);
+//         // std::cout << "boardHash = " << boardHash << std::endl << std::endl;
+//         std::pair<bool, int> ML_rsl = scores.getScore(boardHash, turnCalculator(board));
+
+//         int score = ML_rsl.second;
+
+//         if (!ML_rsl.first) { // could find the answer in file
+//             score = alphabeta(board, 1, alpha, beta, false, humanBits, cpuBits);
+//             scores.putScore(boardHash, turnCalculator(board), score);
+//             std::cout << "NEW SCORE" << std::endl;
+//         }
+//         // else
+//         //     score = ML_rsl.second;
+
+
+// //        std::cout << "For X:" << x << " et Y:" << y << std::endl;
+//         // int score = alphabeta(_board, 1, alpha, beta, false, humanBits, cpuBits);
+
+//         // std::cout << "Final score for Y:" << x << " et X:" << y << " score:" << score << " Fore evaluation : " << staticEval(humanBits) << " evel" << staticEval(cpuBits) << std::endl;
+
+//         board[y][x] = 0;
+//         cpuBits &= ~(1 << pos);
+
+//         // if we find a win, play it immediately
+//         if(score == 9999){
+//             return std::make_pair(y, x);
+//         }
+
+//         if(score > bestScore){
+//             alpha = score;
+//             bestScore = score;
+//             move = std::make_pair(y, x);
+//         }
+//     }
     return move;
 }
 
@@ -384,6 +481,30 @@ int AI::turnCalculator(std::vector<std::vector<char>> &board)
     return rsl;
 }
 
+int AI::alphabeta_thread(std::list<ThreadPool>::iterator thread_it) // switch to void
+{
+    GameState *data = new GameState();
+    // thread_it->stop = new std::mutex(); // maybe put that in its initialiser
+
+    while (thread_it->is_alive) {
+        // const std::lock_guard<std::mutex> lock(*thread_it->stop);
+
+        if (!main_square_memory_space.empty() && main_square_memory_space.swap_tail_value(data)) {
+
+            data->move->second = alphabeta(data->matrix, data->depth, data->alpha, data->beta, data->isAiTurn, data->playerBits, data->opponentBits);
+
+            scores.putScore(data->boardHash, turnCalculator(data->matrix), data->move->second);
+            std::cout << "NEW SCORE" << std::endl;
+
+            main_square_flag.unlock_shared();
+            std::cout << "unlock" << std::endl;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(2)); // need shorter sleep
+        // std::this_thread::sleep_for(std::chrono::duration<float>(1)); // need shorter sleep
+    }
+    // delete data;
+    return 0;
+}
 
 // // int main(void)
 // // {

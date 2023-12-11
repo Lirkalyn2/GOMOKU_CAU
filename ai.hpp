@@ -8,6 +8,7 @@
 #ifndef AI_HPP
 #define AI_HPP
 
+#include <list>
 #include <vector>
 #include <array>
 #include <tuple>
@@ -19,8 +20,13 @@
 #include "./xxhashlib/xxhash.h"
 #include "WinChecker.hpp"
 #include "ML.hpp"
+#include "./include/ThreadPool.hpp"
+#include "./include/GameState.hpp"
+#include "./include/circular_buffer.hpp"
 
 // #define MAX_DEPTH 4;
+#define MAIN_THREADS_NUMBER 14
+#define MAX_MAIN_THREAD_MEM 75
 
 class AI {
     public:
@@ -41,11 +47,16 @@ class AI {
         XXH64_hash_t hashCalculator(std::vector<std::vector<char>> &board);
         int turnCalculator(std::vector<std::vector<char>> &board);
 
+        int alphabeta_thread(std::list<ThreadPool>::iterator thread_it);
+
         ML scores;
     protected:
     private:
         XXH64_state_t *hash_stream;
         // size_t totalCalcs = 0;
+        std::list<ThreadPool> main_square_thread_pool;
+        Circular_buffer<GameState *, MAX_MAIN_THREAD_MEM> main_square_memory_space;
+        std::shared_mutex main_square_flag;
 
 
         int MAX_DEPTH = 4;

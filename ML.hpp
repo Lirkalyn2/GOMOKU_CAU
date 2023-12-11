@@ -12,6 +12,7 @@
 #include <iostream>
 #include <algorithm>
 #include <vector>
+#include <mutex>
 
 #include "./xxhashlib/xxhash.h"
 
@@ -43,6 +44,7 @@ class ML {
     protected:
     private:
         ML_Parameters parameters;
+        std::mutex ML_protector;
         // bool _manual_mode = false;s
 };
 

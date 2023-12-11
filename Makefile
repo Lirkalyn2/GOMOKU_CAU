@@ -24,7 +24,7 @@ OBJ		=	$(SRC:.cpp=.o)
 STATIC_OBJ		=	$(STATIC_SRC:.cpp=.o)
 
 $(NAME)	:	$(OBJ)
-		g++ -O3 -Wall -Wextra -fPIC -o $(NAME) $(SRC) $(STATIC_SRC) ./xxhashlib/xxhash.c
+		g++ -O3 -Wall -Wextra -fPIC -pthread -o $(NAME) $(SRC) $(STATIC_SRC) ./xxhashlib/xxhash.c
 
 
 # $(NAME)	:	$(OBJ)

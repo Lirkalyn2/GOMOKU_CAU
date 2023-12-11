@@ -14,6 +14,8 @@ ML::~ML() {}
 
 std::pair<bool, int> ML::getScore(XXH64_hash_t &boardHash, int turn)
 {
+    std::lock_guard<std::mutex> guard(ML_protector);
+
     if (turn > (int)scores.size())
         return std::make_pair(false, INT32_MIN);
     for (std::vector<ML_Node>::iterator it = scores[turn].begin(); it != scores[turn].end(); it++)
@@ -24,6 +26,8 @@ std::pair<bool, int> ML::getScore(XXH64_hash_t &boardHash, int turn)
 
 void ML::putScore(XXH64_hash_t &boardHash, int turn, int &score)
 {
+    std::lock_guard<std::mutex> guard(ML_protector);
+
     ML_Node tmp;
     std::vector<ML_Node> mm;
 
@@ -69,6 +73,7 @@ void ML::readFile(std::string fileName)
         parameters.version = ML_VERSION;
         parameters.turn_number = 0;
     }
+    fclose(file);
 }
 
 void ML::writeFile(std::string fileName)
