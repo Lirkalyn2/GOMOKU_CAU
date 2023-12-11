@@ -64,6 +64,7 @@ int main()
             if (!is_piece)
                 std::cout << "Wrong move, please try again!" << std::endl;
         }
+        // add a save funciton.
 
         // std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
         if (WinChecker(board, 1).result()) {

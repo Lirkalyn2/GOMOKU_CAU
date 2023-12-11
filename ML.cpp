@@ -17,6 +17,7 @@ ML::ML()
     if (file) {
         fread(&parameters.version, sizeof(int), 1, file); // read parameters to file
         fread(&parameters.turn_number, sizeof(unsigned int), 1, file); // read parameters to file
+        // add depth of search and a warning.
 
         if (parameters.version != ML_VERSION)
             exit(64); // maybe a bit extreme
@@ -44,6 +45,7 @@ ML::~ML()
     parameters.turn_number = scores.size();
     fwrite(&parameters.version, sizeof(int), 1, file); // write parameters to file
     fwrite(&parameters.turn_number, sizeof(unsigned int), 1, file); // write parameters to file
+    // add depth of search.
 
     for (size_t i = 0; i < scores.size(); i++) {
         size_t tmp = scores[i].size();
