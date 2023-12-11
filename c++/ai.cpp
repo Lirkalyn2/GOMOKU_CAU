@@ -150,7 +150,8 @@ void AI::addAdjacent(const char y, const char x, std::vector<unsigned char> &lis
 void AI::put(const char y, const char x, std::vector<unsigned char> &list, const std::vector<std::vector<char>> &my_board)
 {
     char combination = ((y << 4) | x);
-    for(int i = 0; i < list.size(); i++)
+
+    for(size_t i = 0; i < list.size(); i++)
         if (list[i] == combination)
             return;
 
@@ -162,14 +163,14 @@ void AI::put(const char y, const char x, std::vector<unsigned char> &list, const
 int AI::alphabeta(std::vector<std::vector<char>> matrix, int depth, int alpha, int beta, bool isAiTurn, uint256_t playerBits, uint256_t opponentBits)
 {
 
-    if (checkWinner(opponentBits, depth)) {
+    if (checkWinner(opponentBits, depth)) { // could be replaced by check winner
 //        std::cout << "Critical defeat! And a " << (isAiTurn ? " bad" : "good") << " one!!!" << std::endl;
         return isAiTurn ? -9999 : 9999;
     }
 
     // stop at MAX_DEPTH
     if (depth >= MAX_DEPTH) {
-        if (checkWinner(playerBits, depth)) {
+        if (checkWinner(playerBits, depth)) { // could be replaced by check winner
             return isAiTurn ? 9999 : -9999;
         } else {
 //            size_t eval = staticEval(playerBits) - staticEval(opponentBits);
@@ -224,7 +225,6 @@ int AI::alphabeta(std::vector<std::vector<char>> matrix, int depth, int alpha, i
     return best;
 }
 
-// bool AI::checkWinner(uint256_t &matrix, uint256_t &bits, int &depth)
 bool AI::checkWinner(uint256_t &bits, int &depth)
 {
     // if(this.totalMoves + depth < 9){

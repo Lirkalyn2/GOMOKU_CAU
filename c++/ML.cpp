@@ -50,8 +50,6 @@ ML::~ML()
         fwrite(&tmp, sizeof(size_t), 1, file); // write number of node for each turn.
 
         for (size_t j = 0; j < tmp; j++) {
-            XXH64_hash_t aa = scores[i][j].boardHash;
-            int aaaa = scores[i][j].score;
             fwrite(&scores[i][j].boardHash, sizeof(XXH64_hash_t), 1, file);
             fwrite(&scores[i][j].score, sizeof(int), 1, file);
         }
@@ -62,7 +60,7 @@ ML::~ML()
 
 std::pair<bool, int> ML::getScore(XXH64_hash_t &boardHash, int turn)
 {
-    if (turn > scores.size())
+    if (turn > (int)scores.size())
         return std::make_pair(false, INT32_MIN);
     for (std::vector<ML_Node>::iterator it = scores[turn].begin(); it != scores[turn].end(); it++)
         if (it != scores[turn].end() && it->boardHash == boardHash)
@@ -77,7 +75,7 @@ void ML::putScore(XXH64_hash_t &boardHash, int turn, int &score)
 
     tmp.boardHash = boardHash;
     tmp.score = score;
-    while (scores.size() < (turn + 1))
+    while ((int)scores.size() < (turn + 1))
         scores.push_back(std::vector<ML_Node>());
     scores[turn].push_back(tmp);
 }
