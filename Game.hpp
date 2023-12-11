@@ -22,7 +22,8 @@ class Game {
         ~Game();
 
         int LaunchPlayerGame();
-        int LaunchAIGame();
+        int LaunchAIGame(AI &player_1);
+        void LaunchXAIGame(size_t X);
 
     protected:
     private:
@@ -36,7 +37,6 @@ class Game {
         uint256_t Player_2_bits = 0;
         WinChecker check;
         bool is_piece;
-        // AI player_1;
         AI player_2;
 };
 

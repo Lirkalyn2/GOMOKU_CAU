@@ -40,9 +40,10 @@ class AI {
 
         XXH64_hash_t hashCalculator(std::vector<std::vector<char>> &board);
         int turnCalculator(std::vector<std::vector<char>> &board);
+
+        ML scores;
     protected:
     private:
-        ML scores;
         XXH64_state_t *hash_stream;
         // size_t totalCalcs = 0;
 

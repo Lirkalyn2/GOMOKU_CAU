@@ -13,6 +13,8 @@ Game::~Game() {}
 
 int Game::LaunchPlayerGame()
 {
+    player_2.scores.readFile("./ML_files/random-file");
+
     while (game_on)
     {
         std::string user_in;
@@ -73,13 +75,13 @@ int Game::LaunchPlayerGame()
         }
 //*-/
     }
+
+    player_2.scores.writeFile("./ML_files/random-file");
     return 0;
 }
 
-int Game::LaunchAIGame() // maybe get oponing move from here.
+int Game::LaunchAIGame(AI &player_1) // maybe get oponing move from here.
 {
-    AI player_1; // maybe separate the ml files between the two AIs, and combine them later.
-
     while (game_on)
     {
 
@@ -119,6 +121,60 @@ int Game::LaunchAIGame() // maybe get oponing move from here.
                 game_on = false; // maybe put a limit on the number of games ???
             }
         }
+    }
+    return 0;
+}
+
+void Game::LaunchXAIGame(size_t X)
+{
+    AI player_1; // maybe separate the ml files between the two AIs, and combine them later.
+
+    for (size_t i = 0; i < X; i++)
+    {
+        // reset board
+        board.clear();
+        board = std::vector<std::vector<char>>{15, std::vector<char>(15, 0)};
+
+        // put first piece;
+        board[i / 100][i % 100] = 1;
+
+        // init AIs
+        player_1.scores.readFile("./ML_files/random-file");
+        player_2.scores.readFile("./ML_files/random-file");
+
+
+        LaunchAIGame(player_1);
+
+        // to know last good circular saves.
+        std::cout << "Last tried = " << (i % 10) << std::endl;
+
+        // merge Ais
+        if (player_1.scores.scores.size() < player_2.scores.scores.size()) { // player_2 AI as more turn.
+            for (size_t i = 0; i < player_1.scores.scores.size(); i++) {
+                for (size_t j = 0; j < player_1.scores.scores[i].size(); j++) {
+                    if (!player_2.scores.isElement(player_1.scores.scores[i][j].boardHash, i))
+                        player_2.scores.scores[i].push_back(player_1.scores.scores[i][j]); // only add new elements.
+                }
+            }
+
+            player_2.scores.writeFile("./ML_files/random-file");
+            player_2.scores.writeFile("./ML_files/random-file" + std::to_string((i % 10))); // save file just in case
+        }
+        else {
+            for (size_t i = 0; i < player_2.scores.scores.size(); i++) {
+                for (size_t j = 0; j < player_2.scores.scores[i].size(); j++) {
+                    if (!player_1.scores.isElement(player_2.scores.scores[i][j].boardHash, i))
+                        player_1.scores.scores[i].push_back(player_2.scores.scores[i][j]); // only add new elements.
+                }
+            }
+
+            player_1.scores.writeFile("./ML_files/random-file");
+            player_1.scores.writeFile("./ML_files/random-file" + std::to_string((i % 10))); // save file just in case
+        }
+
+        // clear Ais
+        player_1.scores.scores.clear();
+        player_2.scores.scores.clear();
     }
 }
 

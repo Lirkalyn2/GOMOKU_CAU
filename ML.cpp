@@ -7,11 +7,44 @@
 
 #include "ML.hpp"
 
-ML::ML()
-{
-    // check files parameters to make everything is alright
+ML::ML() {}
 
-    FILE *file = fopen("./ML_files/random-file", "rb"); // can fail randomly, need protection
+ML::~ML() {}
+
+
+std::pair<bool, int> ML::getScore(XXH64_hash_t &boardHash, int turn)
+{
+    if (turn > (int)scores.size())
+        return std::make_pair(false, INT32_MIN);
+    for (std::vector<ML_Node>::iterator it = scores[turn].begin(); it != scores[turn].end(); it++)
+        if (it != scores[turn].end() && it->boardHash == boardHash)
+            return std::make_pair(true, it->score);
+    return std::make_pair(false, INT32_MIN);
+}
+
+void ML::putScore(XXH64_hash_t &boardHash, int turn, int &score)
+{
+    ML_Node tmp;
+    std::vector<ML_Node> mm;
+
+    tmp.boardHash = boardHash;
+    tmp.score = score;
+    while ((int)scores.size() < (turn + 1))
+        scores.push_back(std::vector<ML_Node>());
+    scores[turn].push_back(tmp);
+}
+
+bool ML::isElement(XXH64_hash_t &boardHash, int turn)
+{
+    for (std::vector<ML_Node>::iterator it = scores[turn].begin(); it != scores[turn].end(); it++)
+        if (it != scores[turn].end() && it->boardHash == boardHash)
+            return false;
+    return true;
+}
+
+void ML::readFile(std::string fileName)
+{
+    FILE *file = fopen(fileName.c_str(), "rb"); // can fail randomly, need protection
     size_t tmp;
 
     if (file) {
@@ -38,9 +71,9 @@ ML::ML()
     }
 }
 
-ML::~ML()
+void ML::writeFile(std::string fileName)
 {
-    FILE *file = fopen("./ML_files/random-file", "wb"); // can fail randomly, need protection
+    FILE *file = fopen(fileName.c_str(), "wb"); // can fail randomly, need protection
 
     parameters.turn_number = scores.size();
     fwrite(&parameters.version, sizeof(int), 1, file); // write parameters to file
@@ -57,27 +90,4 @@ ML::~ML()
         }
     }
     fclose(file);
-}
-
-
-std::pair<bool, int> ML::getScore(XXH64_hash_t &boardHash, int turn)
-{
-    if (turn > (int)scores.size())
-        return std::make_pair(false, INT32_MIN);
-    for (std::vector<ML_Node>::iterator it = scores[turn].begin(); it != scores[turn].end(); it++)
-        if (it != scores[turn].end() && it->boardHash == boardHash)
-            return std::make_pair(true, it->score);
-    return std::make_pair(false, INT32_MIN);
-}
-
-void ML::putScore(XXH64_hash_t &boardHash, int turn, int &score)
-{
-    ML_Node tmp;
-    std::vector<ML_Node> mm;
-
-    tmp.boardHash = boardHash;
-    tmp.score = score;
-    while ((int)scores.size() < (turn + 1))
-        scores.push_back(std::vector<ML_Node>());
-    scores[turn].push_back(tmp);
 }
