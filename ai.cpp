@@ -34,11 +34,8 @@ uint AI::countSetBits(unsigned char n)
     return (BitsSetTable256[n]);
 }
 
-AI::AI(std::vector<std::vector<char>> board, char Ai_color, char Enemy_Color)
+AI::AI()
 {
-    _board = board;
-    _AI_Color = Ai_color;
-    _Enemy_Color = Enemy_Color;
     initialize();
 }
 
@@ -47,37 +44,37 @@ AI::~AI()
     XXH64_freeState(hash_stream);
 }
 
-std::pair<int, int> AI::bestMove(uint256_t humanBits, uint256_t cpuBits)
+std::pair<int, int> AI::bestMove(std::vector<std::vector<char>> &board, uint256_t &humanBits, uint256_t &cpuBits)
 {
-    std::vector<std::pair<int, int>> squares = getSquaresToCheck(_board);
+    std::vector<std::pair<int, int>> squares = getSquaresToCheck(board);
     std::pair<int, int> move;
-    int alpha = NINFINITY;
-    int beta = INFINITY;
-    int bestScore = NINFINITY;
+    int alpha = MY_NINFINITY;
+    int beta = MY_INFINITY;
+    int bestScore = MY_NINFINITY;
 
-    for (size_t i = 0; i < squares.size(); i++) {
-        int y = squares[i].first;
-        int x = squares[i].second;
-        std::cout << "With Y:" << x << " X:" << y << std::endl;
-    }
+    // for (size_t i = 0; i < squares.size(); i++) {
+    //     int y = squares[i].first;
+    //     int x = squares[i].second;
+    //     std::cout << "With Y:" << x << " X:" << y << std::endl;
+    // }
 
     for (size_t i = 0; i < squares.size(); i++) {
         int y = squares[i].first;
         int x = squares[i].second;
         uint256_t pos = uint256_t((y * 15) + x);
 
-        _board[y][x] = -1;
+        board[y][x] = -1;
         cpuBits |= 1 << pos;
 
-        XXH64_hash_t boardHash = hashCalculator();
+        XXH64_hash_t boardHash = hashCalculator(board);
         // std::cout << "boardHash = " << boardHash << std::endl << std::endl;
-        std::pair<bool, int> ML_rsl = scores.getScore(boardHash, turnCalculator());
+        std::pair<bool, int> ML_rsl = scores.getScore(boardHash, turnCalculator(board));
 
         int score = ML_rsl.second;
 
-        if (!ML_rsl.first) {
-            score = alphabeta(_board, 1, alpha, beta, false, humanBits, cpuBits);
-            scores.putScore(boardHash, turnCalculator(), score);
+        if (!ML_rsl.first) { // could find the answer in file
+            score = alphabeta(board, 1, alpha, beta, false, humanBits, cpuBits);
+            scores.putScore(boardHash, turnCalculator(board), score);
             std::cout << "NEW SCORE" << std::endl;
         }
         // else
@@ -91,7 +88,7 @@ std::pair<int, int> AI::bestMove(uint256_t humanBits, uint256_t cpuBits)
 
         // create entry, put score.
 
-        _board[y][x] = 0;
+        board[y][x] = 0;
         cpuBits &= ~(1 << pos);
 
         // if we find a win, play it immediately
@@ -115,7 +112,7 @@ std::vector<std::pair<int, int>> AI::getSquaresToCheck(const std::vector<std::ve
 
     for (size_t y = 0; y < my_board.size(); y++) {
         for (size_t x = 0; x < my_board[y].size(); x++) {
-            if (my_board[y][x] != 0) {
+            if (my_board[y][x] != 0) { // maybe only check enemy squares ???
                 addAdjacent(y, x, tmp_rsl, my_board);
             }
         }
@@ -163,14 +160,14 @@ void AI::put(const char y, const char x, std::vector<unsigned char> &list, const
 int AI::alphabeta(std::vector<std::vector<char>> matrix, int depth, int alpha, int beta, bool isAiTurn, uint256_t playerBits, uint256_t opponentBits)
 {
 
-    if (checkWinner(opponentBits, depth)) { // could be replaced by check winner
+    if (WinChecker::hasWon(opponentBits)) {
 //        std::cout << "Critical defeat! And a " << (isAiTurn ? " bad" : "good") << " one!!!" << std::endl;
         return isAiTurn ? -9999 : 9999;
     }
 
     // stop at MAX_DEPTH
     if (depth >= MAX_DEPTH) {
-        if (checkWinner(playerBits, depth)) { // could be replaced by check winner
+        if (WinChecker::hasWon(playerBits)) {
             return isAiTurn ? 9999 : -9999;
         } else {
 //            size_t eval = staticEval(playerBits) - staticEval(opponentBits);
@@ -180,8 +177,8 @@ int AI::alphabeta(std::vector<std::vector<char>> matrix, int depth, int alpha, i
         }
     }
 
-        int best = isAiTurn ? -9999 : 9999;
-    std::vector<std::pair<int, int>> squares = getSquaresToCheck(matrix);//, depth);
+    int best = isAiTurn ? -9999 : 9999;
+    std::vector<std::pair<int, int>> squares = getSquaresToCheck(matrix);
 
     for (size_t i = 0; i < squares.size(); i++) {
 
@@ -223,58 +220,6 @@ int AI::alphabeta(std::vector<std::vector<char>> matrix, int depth, int alpha, i
         }
     }
     return best;
-}
-
-bool AI::checkWinner(uint256_t &bits, int &depth)
-{
-    // if(this.totalMoves + depth < 9){
-    //     return false;
-    // }
-
-    // if(checkCache('winners', bits) !== false){
-    //     return checkCache('winners', bits);
-    // }
-
-    if(hasWon(bits)){
-        // putCache('winners', bits, true);
-        return true;
-    }
-
-    // putCache('winners', bits, false);
-    return false;
-}
-
-bool AI::hasWon(const uint256_t &matrix)
-{
-    uint256_t h = 31;
-    uint256_t v = 1152956690052710401;
-    // uint256_t d1 = 18447025552981295105;
-    uint256_t d1 = 281479271743489;
-    d1 *= 65536;
-    d1 += 1;
-    uint256_t d2 = 1152991877646254096;
-
-    if(matchBitmask(matrix, h)) return true;
-    if(matchBitmask(matrix, d1)) return true;
-    if(matchBitmask(matrix, d2)) return true;
-
-    // vertical is a "bit" different :)
-    while(v <= matrix) {
-        if((v & matrix) == v) return true;
-        v *= 2;
-    }
-
-    return false;
-}
-
-bool AI::matchBitmask(const uint256_t &matrix, uint256_t &mask)
-{
-    for(size_t i = 0; mask <= matrix; i++, mask *= 2){
-        if((i % 15) > 10) continue;
-        if((mask & matrix) == mask) return true;
-    }
-
-    return false;
 }
 
 size_t calcStreak(int streak) {
@@ -370,8 +315,7 @@ size_t AI::staticREval(const uint256_t &matrix, const uint256_t &opponentMatrix)
     size_t total = 0;
     uint256_t h = 31;
     uint256_t v = 1152956690052710401;
-    // uint256_t d1 = 18447025552981295105;
-    uint256_t d1 = 281479271743489;
+    uint256_t d1 = 281479271743489; // 18447025552981295105
     d1 *= 65536;
     d1 += 1;
     uint256_t d2 = 1152991877646254096;
@@ -419,168 +363,95 @@ size_t AI::staticREval(const uint256_t &matrix, const uint256_t &opponentMatrix)
     return (total);
 }
 
-XXH64_hash_t AI::hashCalculator()
+XXH64_hash_t AI::hashCalculator(std::vector<std::vector<char>> &board)
 {
     XXH64_reset(hash_stream, 0);
-    for (size_t i = 0; i < _board.size(); i++) {
-        XXH64_update(hash_stream, _board[i].data(), _board[i].size());
+    for (size_t i = 0; i < board.size(); i++) {
+        XXH64_update(hash_stream, board[i].data(), board[i].size());
     }
     // XXH64_hash_t boardHash = XXH64_digest(hash_stream);
     return XXH64_digest(hash_stream);
 }
 
-int AI::turnCalculator()
+int AI::turnCalculator(std::vector<std::vector<char>> &board)
 {
     int rsl = 0;
 
-    for (size_t i = 0; i < _board.size(); i++)
-        for (size_t j = 0; j < _board.size(); j++)
-            if (_board[i][j] != 0)
+    for (size_t i = 0; i < board.size(); i++)
+        for (size_t j = 0; j < board.size(); j++)
+            if (board[i][j] != 0)
                 rsl++;
     return rsl;
 }
 
-extern "C" {
-    int ai(int **board) {
-        std::vector<std::vector<char>> boardPP(15);
 
-        for (int x = 0; x < 15; x++) {
-            std::vector<char> tmp(15);
-            for (int y = 0; y < 15; y++) {
-                tmp[y] = board[x][y];
-            }
-            boardPP[x] = tmp;
-        }
+// // int main(void)
+// // {
+// //     int **data;
 
-        uint256_t Player_1_bits = 0;
-        uint256_t Player_2_bits = 0;
+// //     data = new int*[15];
 
-        for (int i = (int)(boardPP.size() - 1); i >= 0; i--) {
-            for(int j = (int)(boardPP[i].size() - 1); j >= 0; j--) {
+// //     for (int x = 0; x < 15; x++)
+// //         data[x] = new int[15];
 
-                if (boardPP[i][j] == 1)
-                    Player_1_bits = (Player_1_bits << 1) | 1;
-                else
-                    Player_1_bits = (Player_1_bits << 1);
+// //     for (int x = 0; x < 15; x++)
+// //         for (int y = 0; y < 15; y++)
+// //             data[x][y] = 0;
 
-                if (boardPP[i][j] == 2)
-                    Player_2_bits = (Player_2_bits << 1) | 1;
-                else
-                    Player_2_bits = (Player_2_bits << 1);
-            }
-        }
-
-        AI test_player_2(boardPP, 2, 1);
-        std::pair<int, int> rsl = test_player_2.bestMove(Player_1_bits, Player_2_bits);
-        // std::cout << "Returning " << rsl.first << " " << rsl.second << std::endl;
-        return ((rsl.first * 100) + rsl.second);
+// //     data[0][0] = 1;
 
 
+// // //    data[0][0] = 1;
+// //     data[0][1] = 1;
+// //     data[0][2] = 1;
+// //     data[0][3] = 1;
+// // //    data[0][4] = 1;
 
 
-        // boardPP[rsl.first][rsl.second] = 2;
+// // /*
+// //     data[0][0] = 1;
+// //     data[1][0] = 1;
+// //     data[2][0] = 1;
+// //     data[3][0] = 1;
+// //     data[4][0] = 1;
+// // */
 
 
-
-        // Player_1_bits = 0;
-        // Player_2_bits = 0;
-
-        // for (int i = (int)(boardPP.size() - 1); i >= 0; i--) {
-        //     for(int j = (int)(boardPP[i].size() - 1); j >= 0; j--) {
-
-        //         if (boardPP[i][j] == 1)
-        //             Player_1_bits = (Player_1_bits << 1) | 1;
-        //         else
-        //             Player_1_bits = (Player_1_bits << 1);
-
-        //         if (boardPP[i][j] == 2)
-        //             Player_2_bits = (Player_2_bits << 1) | 1;
-        //         else
-        //             Player_2_bits = (Player_2_bits << 1);
-        //     }
-        // }
-
-        // AI aaaa(boardPP, 2, 1);
-        // rsl = aaaa.bestMove(Player_1_bits, Player_2_bits);
+// // /*
+// //     data[0][4] = 1;
+// //     data[1][3] = 1;
+// //     data[2][2] = 1;
+// //     data[3][1] = 1;
+// //     data[4][0] = 1;
+// // */
 
 
-        // return std::to_string(rsl.first) + " " + std::to_string(rsl.second);
+// // /*
+// //     data[0][0] = 1;
+// //     data[1][1] = 1;
+// //     data[2][2] = 1;
+// //     data[3][3] = 1;
+// //     data[4][4] = 1;
+// // */
 
-        // return std::string("ok").c_str();
+// //     for (int x = 0; x < 15; x++) {
+// //         for (int y = 0; y < 15; y++)
+// //             std::cout << data[x][y] << " ";
+// //         std::cout << std::endl;
+// //     }
 
-        // return WinChecker(boardPP, pieceNumber).result();
-        // return std::string();
-        // return 0;
-    }
-}
+// //     //std::cout << winCheck(1, data) << std::endl;
+// //     //std::cout << true << std::endl;
 
-// int main(void)
-// {
-//     int **data;
+// //     int rsl = ai(data);
+// //     // data[rsl / 100][rsl % 100] = 2;
+// //     // ai(data);
 
-//     data = new int*[15];
+// //     for (int x = 0; x < 15; x++)
+// //         delete[] data[x];
 
-//     for (int x = 0; x < 15; x++)
-//         data[x] = new int[15];
-
-//     for (int x = 0; x < 15; x++)
-//         for (int y = 0; y < 15; y++)
-//             data[x][y] = 0;
-
-//     data[0][0] = 1;
-
-
-// //    data[0][0] = 1;
-//     data[0][1] = 1;
-//     data[0][2] = 1;
-//     data[0][3] = 1;
-// //    data[0][4] = 1;
+// //     delete[] data;
 
 
-// /*
-//     data[0][0] = 1;
-//     data[1][0] = 1;
-//     data[2][0] = 1;
-//     data[3][0] = 1;
-//     data[4][0] = 1;
-// */
-
-
-// /*
-//     data[0][4] = 1;
-//     data[1][3] = 1;
-//     data[2][2] = 1;
-//     data[3][1] = 1;
-//     data[4][0] = 1;
-// */
-
-
-// /*
-//     data[0][0] = 1;
-//     data[1][1] = 1;
-//     data[2][2] = 1;
-//     data[3][3] = 1;
-//     data[4][4] = 1;
-// */
-
-//     for (int x = 0; x < 15; x++) {
-//         for (int y = 0; y < 15; y++)
-//             std::cout << data[x][y] << " ";
-//         std::cout << std::endl;
-//     }
-
-//     //std::cout << winCheck(1, data) << std::endl;
-//     //std::cout << true << std::endl;
-
-//     int rsl = ai(data);
-//     // data[rsl / 100][rsl % 100] = 2;
-//     // ai(data);
-
-//     for (int x = 0; x < 15; x++)
-//         delete[] data[x];
-
-//     delete[] data;
-
-
-//     return 0;
-// }
+// //     return 0;
+// // }

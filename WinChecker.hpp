@@ -2,29 +2,18 @@
 #define GOMOKU_HPP
 
 #include <vector>
-#include <iostream>
+
+#include "./uint256/uint256_t.h"
 
 class WinChecker {
     public:
         WinChecker();
         ~WinChecker();
-        static bool result(std::vector<std::vector<char>> &board, int pieceNumber);
+        static bool hasWon(const uint256_t &matrix);
 
     protected:
     private:
-        static bool rowCheck(std::vector<std::vector<char>> board, int &pieceNumber);
-        static int countOccurrences(std::vector<char> &arr, int &pieceNumber);
-
-        static std::vector<std::vector<char>> transposeDiagonalDec(std::vector<std::vector<char>> &board);
-        static std::vector<char> getDiagonalDec(std::vector<std::vector<char>> &board, int digNum);
-
-        static std::vector<std::vector<char>> transposeDiagonalInc(std::vector<std::vector<char>> &board);
-        static std::vector<char> getDiagonalInc(std::vector<std::vector<char>> &board, int digNum);
-
-        static std::vector<std::vector<char>> transpose(std::vector<std::vector<char>> &board);
-        static std::vector<char> getCol(std::vector<std::vector<char>> &board, int colNum);
-
-        const static int _goal = 5;
+        static bool matchBitmask(const uint256_t &matrix, uint256_t &mask);
 };
 
 #endif /* !GOMOKU_HPP */
