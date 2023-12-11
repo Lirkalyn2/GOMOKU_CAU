@@ -35,14 +35,11 @@ class ML {
         ~ML();
         std::pair<bool, int> getScore(XXH64_hash_t &boardHash, int turn); // (false, -2B) if unknow
         void putScore(XXH64_hash_t &boardHash, int turn, int &score);
-        // read file
-        // write file
 
     protected:
     private:
         ML_Parameters parameters;
         std::vector<std::vector<ML_Node>> scores;
-    // structe to sotre hashes and resulting scores. (separet it by amount of turned passed)
 };
 
 #endif /* !ML_HPP */

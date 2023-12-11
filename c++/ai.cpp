@@ -83,6 +83,7 @@ std::pair<int, int> AI::bestMove(uint256_t humanBits, uint256_t cpuBits)
         // else
         //     score = ML_rsl.second;
 
+
 //        std::cout << "For X:" << x << " et Y:" << y << std::endl;
         // int score = alphabeta(_board, 1, alpha, beta, false, humanBits, cpuBits);
 
@@ -471,15 +472,45 @@ extern "C" {
 
         AI test_player_2(boardPP, 2, 1);
         std::pair<int, int> rsl = test_player_2.bestMove(Player_1_bits, Player_2_bits);
-
         // std::cout << "Returning " << rsl.first << " " << rsl.second << std::endl;
         return ((rsl.first * 100) + rsl.second);
+
+
+
+
+        // boardPP[rsl.first][rsl.second] = 2;
+
+
+
+        // Player_1_bits = 0;
+        // Player_2_bits = 0;
+
+        // for (int i = (int)(boardPP.size() - 1); i >= 0; i--) {
+        //     for(int j = (int)(boardPP[i].size() - 1); j >= 0; j--) {
+
+        //         if (boardPP[i][j] == 1)
+        //             Player_1_bits = (Player_1_bits << 1) | 1;
+        //         else
+        //             Player_1_bits = (Player_1_bits << 1);
+
+        //         if (boardPP[i][j] == 2)
+        //             Player_2_bits = (Player_2_bits << 1) | 1;
+        //         else
+        //             Player_2_bits = (Player_2_bits << 1);
+        //     }
+        // }
+
+        // AI aaaa(boardPP, 2, 1);
+        // rsl = aaaa.bestMove(Player_1_bits, Player_2_bits);
+
+
         // return std::to_string(rsl.first) + " " + std::to_string(rsl.second);
 
         // return std::string("ok").c_str();
 
         // return WinChecker(boardPP, pieceNumber).result();
         // return std::string();
+        // return 0;
     }
 }
 
@@ -541,7 +572,9 @@ int main(void)
     //std::cout << winCheck(1, data) << std::endl;
     //std::cout << true << std::endl;
 
-    ai(data);
+    int rsl = ai(data);
+    // data[rsl / 100][rsl % 100] = 2;
+    // ai(data);
 
     for (int x = 0; x < 15; x++)
         delete[] data[x];
