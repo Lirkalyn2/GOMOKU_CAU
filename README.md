@@ -45,4 +45,6 @@ Where do you want to put your piece?
 
 To trains the AI against itself you can either use `./Gomoku AI` for two matches or `./Gomoku AI 18` for 18 matches.
 
+The AI file is `./ML_files/random-file` so make sure you have it for the best experience, the new moves are registered to it, when the game is over.
+
 Have FUN !!!
