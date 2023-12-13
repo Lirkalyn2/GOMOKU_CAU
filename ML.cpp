@@ -14,11 +14,20 @@ ML::~ML() {}
 
 std::pair<bool, int> ML::getScore(XXH64_hash_t &boardHash, int turn)
 {
-    if (turn > (int)scores.size())
+    // std::cout << "getScore = " << boardHash << ", " << turn << "scores size = " << scores.size() << std::endl;
+
+    if (turn >= (int)scores.size()) {
+        // std::cout << "getScore 1" << std::endl;
         return std::make_pair(false, INT32_MIN);
+    }
+
     for (std::vector<ML_Node>::iterator it = scores[turn].begin(); it != scores[turn].end(); it++)
-        if (it != scores[turn].end() && it->boardHash == boardHash)
+        if (it != scores[turn].end() && it->boardHash == boardHash) {
+            // std::cout << "getScore 2" << std::endl;
             return std::make_pair(true, it->score);
+        }
+
+    // std::cout << "getScore 3" << std::endl;
     return std::make_pair(false, INT32_MIN);
 }
 

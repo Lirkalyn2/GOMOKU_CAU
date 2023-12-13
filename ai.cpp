@@ -68,14 +68,16 @@ std::pair<int, int> AI::bestMove(std::vector<std::vector<char>> &board, uint256_
 
         XXH64_hash_t boardHash = hashCalculator(board);
         // std::cout << "boardHash = " << boardHash << std::endl << std::endl;
+        // std::cout << "before getScore: y = " << y << ", x = " << x << std::endl;
         std::pair<bool, int> ML_rsl = scores.getScore(boardHash, turnCalculator(board));
+        // std::cout << "after getscore" << std::endl;
 
         int score = ML_rsl.second;
 
         if (!ML_rsl.first) { // could find the answer in file
             score = alphabeta(board, 1, alpha, beta, false, humanBits, cpuBits);
             scores.putScore(boardHash, turnCalculator(board), score);
-            std::cout << "NEW SCORE" << std::endl;
+            // std::cout << "NEW SCORE" << std::endl;
         }
         // else
         //     score = ML_rsl.second;

@@ -64,6 +64,9 @@ int Game::LaunchPlayerGame()
             // Player_2_bits = bits_calculator(board, 2);
 
             std::pair<int, int> rsl = player_2.bestMove(board, Player_1_bits, Player_2_bits);// give board to best move
+            // std::cout << "y = " << (char)(rsl.second + 'a') << ", x = " << (rsl.first + 1) << std::endl;
+            // std::cout << "y = " << (rsl.second) << ", x = " << (rsl.first + 1) << std::endl;
+            // std::cout << "x = " << (rsl.first + 1) << ", y = " << (rsl.second) << std::endl;
             put_piece(board, rsl.first, rsl.second, 2);
             Player_2_bits = bits_calculator(board, 2);
             // if (WinChecker(board, 2).result()) {

@@ -46,3 +46,4 @@ server/prisma/db
 *.out
 test
 *.a
+Gomoku

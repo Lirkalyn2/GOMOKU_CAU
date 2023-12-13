@@ -7,7 +7,8 @@ int main(int argc, char const *argv[])
             Game().LaunchXAIGame(std::stoi(argv[2]));
         }
         else
-            Game().LaunchXAIGame(10);
+            Game().LaunchXAIGame(2);
+            // Game().LaunchXAIGame(10);
     }
     else
         Game().LaunchPlayerGame();
